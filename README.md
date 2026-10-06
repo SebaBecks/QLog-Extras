@@ -26,7 +26,7 @@ Only features tested on real rigs are published here. Tested on Windows 11 with 
 
 ## Download
 
-Windows packages are on the [Releases](https://github.com/SebaBecks/QLog-Extras/releases) page. Read `CZYTAJ-TO-NAJPIERW.txt` in the package before the first start.
+Windows packages are on the [Releases](https://github.com/SebaBecks/QLog-Extras/releases) page. Read `README-FIRST.txt` in the package before the first start (Polish: `CZYTAJ-TO-NAJPIERW.txt`).
 
 ## License
 
