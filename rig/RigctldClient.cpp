@@ -7,7 +7,8 @@
 MODULE_IDENTIFICATION("qlog.rig.rigctldclient");
 
 #define CONNECT_TIMEOUT 3000
-#define REPLY_TIMEOUT   2000
+// rigctld with the Icom scope stream answers slowly for a few seconds after start
+#define REPLY_TIMEOUT   4000
 
 RigctldClient::RigctldClient(QObject *parent) :
     QObject(parent),
@@ -15,7 +16,6 @@ RigctldClient::RigctldClient(QObject *parent) :
     timer(new QTimer(this)),
     port(0),
     index(0),
-    linesLeft(0),
     busy(false)
 {
     FCT_IDENTIFICATION;
@@ -95,10 +95,26 @@ void RigctldClient::sendNext()
     }
 
     buffer.clear();
+    replyLines.clear();
 
-    linesLeft = ( index < expected.size() ) ? qMax(1, expected.at(index)) : 1;
-    socket->write((pending.at(index) + "\n").toLatin1());
+    /* Extended protocol: every reply ends with RPRT. Counting plain lines
+       broke when a rig answered with more or fewer (IC-705 get_vfo_info
+       adds RPRT -11), and every later reply went to the wrong command. */
+    socket->write(("+" + pending.at(index) + "\n").toLatin1());
     timer->start(REPLY_TIMEOUT);
+}
+
+// "Frequency: 7140390" -> "7140390"; some replies carry the bare value
+static QString replyValue(const QString &line)
+{
+    FCT_IDENTIFICATION;
+
+    if ( line.endsWith(QChar(':')) )
+        return QString();
+
+    const int colon = line.indexOf(QStringLiteral(": "));
+
+    return colon >= 0 ? line.mid(colon + 2).trimmed() : line;
 }
 
 void RigctldClient::socketReadyRead()
@@ -114,45 +130,32 @@ void RigctldClient::socketReadyRead()
         return;
     }
 
-    const int newline = buffer.indexOf('\n');
+    int end;
 
-    if ( newline < 0 )
-        return;
-
-    timer->stop();
-
-    // read all expected lines, or later replies get out of step
-    while ( linesLeft > 0 )
+    while ( ( end = buffer.indexOf('\n') ) >= 0 )
     {
-        const int end = buffer.indexOf('\n');
-
-        if ( end < 0 )
-        {
-            timer->start(REPLY_TIMEOUT);
-            return;
-        }
-
         const QString line = QString::fromLatin1(buffer.left(end)).trimmed();
         buffer.remove(0, end + 1);
 
-        /* RPRT alone means no value or an error; no further lines follow, even
-           for a multi-line command, so fill the rest with empty values. */
-        if ( line.startsWith(QStringLiteral("RPRT")) )
+        if ( !line.startsWith(QStringLiteral("RPRT")) )
         {
-            while ( linesLeft > 0 )
-            {
-                collected << QString();
-                linesLeft--;
-            }
-            break;
+            replyLines << line;
+            continue;
         }
 
-        collected << line;
-        linesLeft--;
-    }
+        timer->stop();
 
-    index++;
-    sendNext();
+        // first line echoes the command; an error leaves every value empty
+        const bool ok = ( line == QStringLiteral("RPRT 0") );
+        const int wanted = ( index < expected.size() ) ? qMax(1, expected.at(index)) : 1;
+
+        for ( int i = 0; i < wanted; i++ )
+            collected << ( ok ? replyValue(replyLines.value(i + 1)) : QString() );
+
+        index++;
+        sendNext();
+        return;
+    }
 }
 
 void RigctldClient::finish()

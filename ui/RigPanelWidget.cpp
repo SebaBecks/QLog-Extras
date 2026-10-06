@@ -24,6 +24,9 @@
 #include "ui/NewContactWidget.h"
 #include "ui/RigRecordingDialog.h"
 #include "core/debug.h"
+#include "rig/drivers/HamlibCompat.h"
+
+#include <hamlib/rig.h>
 
 MODULE_IDENTIFICATION("qlog.ui.rigpanelwidget");
 
@@ -603,7 +606,10 @@ void RigPanelWidget::rigConnectHandler()
     splitButton->setEnabled(viaRigctld || profile.getSplitInfo);
 
     if ( viaRigctld )
+    {
+        loadRigctldSteps(profile.model);
         primeSlowReadings();
+    }
 
     if ( extrasAvailable )
         scheduleCycle(RX_INTERVAL);
@@ -673,6 +679,8 @@ void RigPanelWidget::rigDisconnectHandler()
 
     keyed = false;
     splitEnabled = false;
+    activeVfoIsB = false;
+    rigReportsVfo = false;
     otherFreq.clear();
     otherMode.clear();
     activeMode.clear();
@@ -697,10 +705,18 @@ void RigPanelWidget::frequencyChanged(VFOID vfoid, double vfoFreq, double, doubl
     // in split, OmniRig/flrig report the TX VFO as VFO2: show it in the other row
     if ( vfoid == VFO2 )
     {
+        // with rigctld the cycle reads the TX frequency itself (i)
+        if ( splitEnabled && meterSource == RigctldMeters )
+            return;
+
         otherFreq = vfoFreq > 0.0 ? formatFrequency(vfoFreq) : QString();
         updateVfoRows();
         return;
     }
+
+    // Hamlib's client reports the TX VFO as current in split; the cycle reads RX
+    if ( splitEnabled && meterSource == RigctldMeters )
+        return;
 
     currentFreq = vfoFreq;
     updateVfoRows();
@@ -735,8 +751,10 @@ void RigPanelWidget::vfoChanged(VFOID, const QString &vfo)
 {
     FCT_IDENTIFICATION;
 
-    const bool isB = vfo.contains(QStringLiteral("Sub"), Qt::CaseInsensitive)
-                     || vfo.endsWith(QChar('B'));
+    if ( vfo.isEmpty() || vfo.contains(QStringLiteral("curr"), Qt::CaseInsensitive) )
+        return;
+
+    rigReportsVfo = true;
 
     // label rows as the rig does
     const bool mainSub = vfo.contains(QStringLiteral("Main"), Qt::CaseInsensitive)
@@ -744,6 +762,14 @@ void RigPanelWidget::vfoChanged(VFOID, const QString &vfo)
 
     ui->aCaption->setText(mainSub ? tr("MAIN") : tr("VFO A"));
     ui->bCaption->setText(mainSub ? tr("SUB") : tr("VFO B"));
+
+    setActiveVfo(vfo.contains(QStringLiteral("Sub"), Qt::CaseInsensitive)
+                 || vfo.endsWith(QChar('B')));
+}
+
+void RigPanelWidget::setActiveVfo(bool isB)
+{
+    FCT_IDENTIFICATION;
 
     if ( isB == activeVfoIsB )
         return;
@@ -781,10 +807,13 @@ void RigPanelWidget::updateVfoRows()
     const QString blank = QStringLiteral("--.---.---");
     const QString grey = QStringLiteral("QLabel { color: #9a9a9a }");
 
+    // a single receiver has no other VFO worth showing outside split
+    const bool showOther = ( meterSource != RigctldMeters ) || dualReceiver || splitEnabled;
+
     liveFreq->setText(currentFreq > 0.0 ? formatFrequency(currentFreq) : blank);
     liveMode->setText(activeMode);
-    idleFreq->setText(otherFreq.isEmpty() ? blank : otherFreq);
-    idleMode->setText(otherMode);
+    idleFreq->setText(showOther && !otherFreq.isEmpty() ? otherFreq : blank);
+    idleMode->setText(showOther ? otherMode : QString());
 
     liveCap->setStyleSheet(QStringLiteral("QLabel { color: #2e7d32 }"));
 
@@ -952,19 +981,32 @@ void RigPanelWidget::startCycle()
         batch << QStringLiteral("l STRENGTH");
         batchLines << 1;
 
+        /* In split the Rig layer reports the TX frequency as current and sends
+           the TX one only on change, so after A/B the rows went wrong or
+           blank. Read both here: f is RX, i (get_split_freq) is TX. */
+        if ( splitEnabled )
+        {
+            batch << QStringLiteral("f") << QStringLiteral("i");
+            batchLines << 1 << 1;
+        }
+
         if ( pollCounter % SLOW_EVERY_NTH_POLL == 0 )
         {
             switch ( ( pollCounter / SLOW_EVERY_NTH_POLL ) % SLOW_GROUPS )
             {
             case 0:
-                /* supply also read on RX as the reference for sag under load;
-                   get_vfo_info answers with 5 lines */
-                batch << QString("%1 %2").arg(QStringLiteral("\\get_vfo_info"),
-                                              otherVfoName())
-                      << QStringLiteral("l TEMP_METER")
+                // supply also read on RX as the reference for sag under load
+                if ( otherVfoReadable && ( dualReceiver || splitEnabled ) )
+                {
+                    batch << QString("%1 %2").arg(QStringLiteral("\\get_vfo_info"),
+                                                  otherVfoName());
+                    batchLines << 5;
+                }
+
+                batch << QStringLiteral("l TEMP_METER")
                       << QStringLiteral("l VD_METER")
                       << QStringLiteral("l ID_METER");
-                batchLines << 5 << 1 << 1 << 1;
+                batchLines << 1 << 1 << 1;
                 break;
 
             case 1:
@@ -1005,7 +1047,17 @@ void RigPanelWidget::rigctldResults(const QStringList &values)
         const QString value = values.value(at);
 
         // PTT may have changed since sending: use readings only in their own state
-        if ( command == QStringLiteral("l STRENGTH") && !value.isEmpty() && !keyed )
+        if ( command == QStringLiteral("f") && !value.isEmpty() && splitEnabled )
+        {
+            currentFreq = value.toDouble() / 1.0e6;
+            updateVfoRows();
+        }
+        else if ( command == QStringLiteral("i") && !value.isEmpty() && splitEnabled )
+        {
+            otherFreq = formatFrequency(value.toDouble() / 1.0e6);
+            updateVfoRows();
+        }
+        else if ( command == QStringLiteral("l STRENGTH") && !value.isEmpty() && !keyed )
             showStrength(value.toInt());
         else if ( command == QStringLiteral("l RFPOWER_METER_WATTS") && !value.isEmpty() && keyed )
             showPower(value.toDouble());
@@ -1028,12 +1080,7 @@ void RigPanelWidget::rigctldResults(const QStringList &values)
             showSupply();
         }
         else if ( command == QStringLiteral("l PREAMP") && !value.isEmpty() )
-        {
-            // FTDX101 step names
-            const int db = value.toInt();
-            showControlState(OmniRigControls::Preamp, db,
-                             db >= 20 ? tr("AMP2") : db >= 10 ? tr("AMP1") : tr("IPO"));
-        }
+            showControlState(OmniRigControls::Preamp, value.toInt(), preampName(value.toInt()));
         else if ( command == QStringLiteral("l ATT") && !value.isEmpty() )
             showControlState(OmniRigControls::Attenuator, value.toInt());
         else if ( command == QStringLiteral("l AGC") && !value.isEmpty() )
@@ -1583,9 +1630,7 @@ void RigPanelWidget::preampClicked()
         return;
     }
 
-    // IPO -> AMP1 -> AMP2
-    setRigLevel(QStringLiteral("PREAMP"),
-                preampDb >= 20 ? 0 : ( preampDb >= 10 ? 20 : 10 ));
+    setRigLevel(QStringLiteral("PREAMP"), nextStep(preampSteps, preampDb));
 }
 
 void RigPanelWidget::attClicked()
@@ -1598,19 +1643,10 @@ void RigPanelWidget::attClicked()
         return;
     }
 
-    int next = 0;
-
-    if ( attDb < 6 )
-        next = 6;
-    else if ( attDb < 12 )
-        next = 12;
-    else if ( attDb < 18 )
-        next = 18;
-
-    setRigLevel(QStringLiteral("ATT"), next);
+    setRigLevel(QStringLiteral("ATT"), nextStep(attSteps, attDb));
 }
 
-// fast -> medium -> slow -> auto; off is skipped on purpose
+// off is skipped on purpose
 void RigPanelWidget::agcClicked()
 {
     FCT_IDENTIFICATION;
@@ -1621,17 +1657,125 @@ void RigPanelWidget::agcClicked()
         return;
     }
 
-    int next = 2;
+    setRigLevel(QStringLiteral("AGC"), nextStep(agcSteps, agcMode));
+}
 
-    switch ( agcMode )
+// the setting after current in steps, back to the first after the last
+int RigPanelWidget::nextStep(const QList<int> &steps, int current) const
+{
+    FCT_IDENTIFICATION;
+
+    if ( steps.isEmpty() )
+        return current;
+
+    const int at = steps.indexOf(current);
+
+    return steps.at(( at + 1 ) % steps.size());
+}
+
+QString RigPanelWidget::preampName(int value) const
+{
+    FCT_IDENTIFICATION;
+
+    if ( value <= 0 )
+        return yaesuPreampNames ? tr("IPO") : tr("off");
+
+    const int at = preampSteps.indexOf(value);
+
+    return at > 0 ? tr("AMP%1").arg(at) : tr("%1 dB").arg(value);
+}
+
+/* PRE, ATT and AGC steps for this model, from Hamlib's caps, as rigctld
+   accepts them (the IC-705 takes preamp 1 and 2, not dB). */
+void RigPanelWidget::loadRigctldSteps(int model)
+{
+    FCT_IDENTIFICATION;
+
+    // FTDX101, also used when Hamlib has no caps for the model
+    preampSteps = { 0, 10, 20 };
+    attSteps = { 0, 6, 12, 18 };
+    agcSteps = { 2, 5, 3, 6 };
+    yaesuPreampNames = true;
+    otherVfoReadable = true;
+    dualReceiver = true;
+
+    const struct rig_caps *caps = rig_get_caps(model);
+
+    if ( !caps )
+        return;
+
+    const QString maker = QString::fromLatin1(caps->mfg_name);
+
+    yaesuPreampNames = ( maker == QStringLiteral("Yaesu") );
+
+    /* On an Icom, get_vfo_info for the other VFO switches rigctld's shared
+       VFO state for a moment: QLog's own driver then reads VFO B's frequency
+       or garbage (IC-705, Hamlib 4.7.2), so the other VFO is not read. */
+    otherVfoReadable = ( maker != QStringLiteral("Icom") );
+
+    // Main and Sub in the VFO list mean a second receiver (FTDX101, IC-7610)
+    int vfos = 0;
+
+    for ( int i = 0; i < HAMLIB_FRQRANGESIZ && !RIG_IS_FRNG_END(caps->rx_range_list1[i]); i++ )
+        vfos |= caps->rx_range_list1[i].vfo;
+
+    dualReceiver = ( vfos & ( RIG_VFO_MAIN | RIG_VFO_SUB ) ) != 0;
+
+    QList<int> preamp = { 0 };
+    QList<int> att = { 0 };
+
+    for ( int i = 0; i < HAMLIB_MAXDBLSTSIZ && caps->preamp[i] != 0; i++ )
+        preamp << caps->preamp[i];
+
+    for ( int i = 0; i < HAMLIB_MAXDBLSTSIZ && caps->attenuator[i] != 0; i++ )
+        att << caps->attenuator[i];
+
+    preampSteps = preamp;
+    attSteps = att;
+
+#if HAMLIB_VERSION >= HAMLIB_VERSION_CHECK(4, 6, 0)
+    /* The whole table, not agc_level_count: the IC-705 and IC-7300 caps
+       list OFF, FAST, MEDIUM, SLOW with a count of 3, which drops SLOW.
+       Unused entries are 0 (OFF) and skipped with it. */
+    QList<int> agc;
+
+    if ( caps->agc_level_count > 0 )
     {
-    case 2:  next = 5; break;
-    case 5:  next = 3; break;
-    case 3:  next = 6; break;
-    default: next = 2; break;
+        for ( int i = 0; i < HAMLIB_MAX_AGC_LEVELS; i++ )
+        {
+            const int level = static_cast<int>(caps->agc_levels[i]);
+
+            if ( level != RIG_AGC_OFF && !agc.contains(level) )
+                agc << level;
+        }
     }
 
-    setRigLevel(QStringLiteral("AGC"), next);
+    if ( !agc.isEmpty() )
+        agcSteps = agc;
+#endif
+
+    auto names = [](const QList<int> &steps) -> QString
+    {
+        QStringList out;
+
+        for ( int step : steps )
+            out << QString::number(step);
+
+        return out.join(QStringLiteral(", "));
+    };
+
+    preButton->setToolTip(tr("Preamp: %1").arg(names(preampSteps)));
+    attButton->setToolTip(tr("Attenuator: %1 dB").arg(names(attSteps)));
+
+    QStringList agcNames;
+
+    for ( int step : static_cast<const QList<int> &>(agcSteps) )
+        agcNames << agcName(step);
+
+    agcButton->setToolTip(tr("AGC: %1").arg(agcNames.join(QStringLiteral(", "))));
+
+    qCDebug(runtime) << "steps for model" << model << "preamp" << preampSteps
+                     << "att" << attSteps << "agc" << agcSteps;
 }
 
 void RigPanelWidget::nbClicked()
@@ -1694,8 +1838,10 @@ void RigPanelWidget::primeSlowReadings()
 {
     FCT_IDENTIFICATION;
 
-    queueRigctldCommand(QString("%1 %2").arg(QStringLiteral("\\get_vfo_info"),
-                                             otherVfoName()), 5);
+    if ( otherVfoReadable && dualReceiver )
+        queueRigctldCommand(QString("%1 %2").arg(QStringLiteral("\\get_vfo_info"),
+                                                 otherVfoName()), 5);
+
     queueRigctldCommand(QStringLiteral("s"), 2);
 
     for ( const QString &command : { QStringLiteral("l TEMP_METER"),
@@ -1715,7 +1861,31 @@ void RigPanelWidget::swapVfoClicked()
     FCT_IDENTIFICATION;
 
     // explicit target VFO, not a toggle, so a retried command is harmless
-    queueRigctldCommand(QStringLiteral("V ") + otherVfoName());
+    const QString target = otherVfoName();
+    const QString left = activeVfoIsB ? QStringLiteral("VFOB") : QStringLiteral("VFOA");
+    const QString leftFreq = currentFreq > 0.0 ? formatFrequency(currentFreq) : QString();
+    const bool swapSplit = splitEnabled && !dualReceiver;
+
+    queueRigctldCommand(QStringLiteral("V ") + target);
+
+    /* A single-receiver rig in split now transmits on the VFO it left, but
+       Hamlib keeps the old TX VFO and get_split_freq would read the RX one. */
+    if ( swapSplit )
+    {
+        queueRigctldCommand(QStringLiteral("S 1 ") + left);
+        queueRigctldCommand(QStringLiteral("s"), 2);
+    }
+
+    // the IC-705 through Hamlib does not report its VFO, so follow it here
+    if ( !rigReportsVfo )
+        setActiveVfo(target == QStringLiteral("VFOB"));
+
+    // until the next read, the TX row holds what was received on
+    if ( swapSplit )
+    {
+        otherFreq = leftFreq;
+        updateVfoRows();
+    }
 }
 
 /* Rig::setSplit needs native get_split_vfo and get_split_freq; the FTdx101

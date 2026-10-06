@@ -87,6 +87,7 @@ private:
     void showPower(double watts);
     void updateVfoRows();
     QString otherVfoName() const;
+    void setActiveVfo(bool isB);
     bool omniRigSkips(const OmniRigMeters::Request &request, qint64 now) const;
     bool askOmniRig(const OmniRigMeters::Request &request);
     void showSupply();
@@ -101,6 +102,9 @@ private:
     void queueRigctldCommand(const QString &command, int lines = 1);
     // read all slow values at once right after connecting
     void primeSlowReadings();
+    void loadRigctldSteps(int model);
+    int nextStep(const QList<int> &steps, int current) const;
+    QString preampName(int value) const;
     // opens the card so the pre-roll buffer fills before REC is pressed
     void applyRecordingSettings();
     QString recordingLabel() const;
@@ -145,6 +149,17 @@ private:
     int preampDb;
     int attDb;
     int agcMode;
+    // rigctld values for PRE, ATT and AGC, from Hamlib's caps for the model
+    QList<int> preampSteps;
+    QList<int> attSteps;
+    QList<int> agcSteps;
+    bool yaesuPreampNames = true;
+    // get_vfo_info for the other VFO is safe on this rig (not on Icoms)
+    bool otherVfoReadable = true;
+    // a second receiver (Main/Sub): the other VFO is shown outside split too
+    bool dualReceiver = true;
+    // the rig layer reports the active VFO; otherwise A/B is followed here
+    bool rigReportsVfo = false;
     RigStateButton *recButton;
     QsoRecorder *recorder;
     QTimer *recordTimer;

@@ -21,7 +21,7 @@ public:
     bool isBusy() const { return busy; }
 
     /* Values come back in command order, empty for a failed command.
-       lineCounts: reply lines per command (default 1; get_vfo_info has 5). */
+       lineCounts: values per command (default 1; get_vfo_info has 5). */
     void query(const QStringList &commands, const QList<int> &lineCounts = QList<int>());
 
 signals:
@@ -43,7 +43,8 @@ private:
     QTimer *timer;
     QStringList pending;
     QList<int> expected;
-    int linesLeft;
+    // lines of the reply now arriving, up to its RPRT
+    QStringList replyLines;
     QStringList collected;
     QByteArray buffer;
     QString host;
