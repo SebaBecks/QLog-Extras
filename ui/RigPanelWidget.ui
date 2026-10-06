@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RigPanelWidget</class>
+ <widget class="QWidget" name="RigPanelWidget">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>460</width><height>260</height></rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <layout class="QGridLayout" name="vfoLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="aCaption">
+       <property name="text"><string>VFO A</string></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="aTxLabel">
+       <property name="text"><string/></property>
+       <property name="alignment"><set>Qt::AlignCenter</set></property>
+       <property name="toolTip"><string>Marks the VFO that transmits, and fills while keyed</string></property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="aStrengthLabel">
+       <property name="text"><string/></property>
+       <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>1</horstretch><verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip"><string>Signal strength on the VFO being listened to</string></property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="aFreqLabel">
+       <property name="text"><string>--.---.---</string></property>
+       <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+       <property name="toolTip"><string>Receive frequency</string></property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <widget class="QLabel" name="aUnitLabel">
+       <property name="text"><string>MHz</string></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignBottom</set></property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QLabel" name="aModeLabel">
+       <property name="text"><string/></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+       <property name="minimumSize"><size><width>62</width><height>0</height></size></property>
+      </widget>
+     </item>
+     <item row="1" column="4" colspan="2">
+      <widget class="QLabel" name="splitLabel">
+       <property name="text"><string>SPLIT</string></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+       <property name="toolTip"><string>Lit when the rig transmits on the other VFO</string></property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="bCaption">
+       <property name="text"><string>VFO B</string></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="bTxLabel">
+       <property name="text"><string/></property>
+       <property name="alignment"><set>Qt::AlignCenter</set></property>
+       <property name="toolTip"><string>Marks the VFO that transmits, and fills while keyed</string></property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="bStrengthLabel">
+       <property name="text"><string/></property>
+       <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+       <property name="toolTip"><string>Signal strength on the VFO being listened to</string></property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="bFreqLabel">
+       <property name="text"><string>--.---.---</string></property>
+       <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+      </widget>
+     </item>
+     <item row="2" column="4">
+      <widget class="QLabel" name="bUnitLabel">
+       <property name="text"><string>MHz</string></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignBottom</set></property>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="QLabel" name="bModeLabel">
+       <property name="text"><string/></property>
+       <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="meterLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="sMeterCaption">
+       <property name="text"><string>S</string></property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QProgressBar" name="sMeterBar">
+       <property name="maximum"><number>100</number></property>
+       <property name="value"><number>0</number></property>
+       <property name="textVisible"><bool>false</bool></property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="sMeterValue">
+       <property name="text"><string>--</string></property>
+       <property name="minimumSize"><size><width>54</width><height>0</height></size></property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="pwrCaption">
+       <property name="text"><string>PWR</string></property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QProgressBar" name="pwrBar">
+       <property name="maximum"><number>100</number></property>
+       <property name="value"><number>0</number></property>
+       <property name="textVisible"><bool>false</bool></property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="pwrValue">
+       <property name="text"><string>--</string></property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="swrCaption">
+       <property name="text"><string>SWR</string></property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QProgressBar" name="swrBar">
+       <property name="maximum"><number>100</number></property>
+       <property name="value"><number>0</number></property>
+       <property name="textVisible"><bool>false</bool></property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QLabel" name="swrValue">
+       <property name="text"><string>--</string></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="bottomLayout">
+     <item>
+      <layout class="QGridLayout" name="buttonGrid"/>
+     </item>
+     <item>
+      <spacer name="bottomSpacerLeft">
+       <property name="orientation"><enum>Qt::Horizontal</enum></property>
+       <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
+      </spacer>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="infoLayout">
+       <item>
+        <widget class="QLabel" name="tempValue">
+         <property name="text"><string/></property>
+         <property name="toolTip"><string>Power amplifier temperature</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="supplyValue">
+         <property name="text"><string/></property>
+         <property name="toolTip"><string>Power amplifier supply while transmitting. A voltage that sags under load is a supply that cannot keep up.</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="alcValue">
+         <property name="text"><string/></property>
+         <property name="toolTip"><string>ALC while transmitting; it is what says whether the drive is right</string></property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="bottomSpacerRight">
+       <property name="orientation"><enum>Qt::Horizontal</enum></property>
+       <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="filterCaption">
+       <property name="text"><string>Filter</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="filterCombo">
+       <property name="toolTip"><string>Receive filter width</string></property>
+       <property name="minimumSize"><size><width>104</width><height>0</height></size></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="calCaption">
+       <property name="text"><string>S cal</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="calSpinBox">
+       <property name="toolTip"><string>Correction applied to the strength reading. The calibration table Hamlib holds for a rig can sit a little off the rig's own meter; six decibels is one S unit.</string></property>
+       <property name="suffix"><string> dB</string></property>
+       <property name="minimum"><number>-30</number></property>
+       <property name="maximum"><number>30</number></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="gainCaption">
+       <property name="text"><string>S9+</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="gainSpinBox">
+       <property name="toolTip"><string>Slope correction above S9. Hamlib reads the rig's raw meter and converts it on a scale of its own, which on some rigs runs flatter above S9 than the rig's own face does - so the stronger the signal, the wider the gap. Set this until a strong station reads the same here as on the rig. One means no correction.</string></property>
+       <property name="prefix"><string>x </string></property>
+       <property name="decimals"><number>1</number></property>
+       <property name="singleStep"><double>0.1</double></property>
+       <property name="minimum"><double>1.0</double></property>
+       <property name="maximum"><double>5.0</double></property>
+       <property name="value"><double>1.0</double></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="sourceLabel">
+       <property name="text"><string/></property>
+       <property name="toolTip"><string>Shown only when the meters cannot be read</string></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

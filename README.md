@@ -1,3 +1,41 @@
+# QLog Extras (unofficial)
+
+This is an **unofficial** build of [QLog](https://github.com/foldynl/QLog) with a few extras that are not part of the original application. It is maintained by SebaBecks, not by the QLog author.
+
+> **Support:** the QLog author does not support forks. Report problems with this build here, in [QLog-Extras issues](https://github.com/SebaBecks/QLog-Extras/issues), not in the original QLog repository.
+
+## Extras
+
+- **Rig Panel** – an extra dock that shows:
+  - S meter, power, SWR and ALC;
+  - preamp, ATT, AGC, NB and NR, readable and switchable;
+  - VFO A/B, split and tuner.
+
+  It works through Hamlib (with *Share Rig via port*) or OmniRig 1 / Omni-Rig V2.
+- **QSO recording** – the REC button saves the receive audio to a WAV file named after the QSO (UTC, callsign, band, mode).
+  - The last 30 s are always buffered, so pressing REC during a QSO still catches its start.
+  - The operator's voice can be added from a second input, recorded as stereo.
+- **Panadapter** – a spectrum and waterfall with DX cluster spots drawn on the signals; a click tunes the rig. The picture comes from:
+  - an RTL-SDR on the rig's IF output or RX OUT;
+  - or the rig's own scope through Hamlib (IC-705, IC-7300, IC-9700, IC-7610 and similar Icoms).
+- **OmniRig CW/CWR fix** – CW follows the rig's normal CW, read from the OmniRig rig file. This fix was also offered to the original QLog.
+
+The database is the same as QLog 0.53.0 (no migration), so you can switch back to the official QLog at any time.
+
+Only features tested on real rigs are published here. Tested on Windows 11 with a Yaesu FTdx101MP and an Icom IC-705.
+
+## Download
+
+Windows packages are on the [Releases](https://github.com/SebaBecks/QLog-Extras/releases) page. Read `CZYTAJ-TO-NAJPIERW.txt` in the package before the first start.
+
+## License
+
+GPL-3.0, like the original QLog. The changes are in this repository's history; everything else is QLog by Ladislav Foldyna (OK1MLG) and its contributors.
+
+---
+
+*The original QLog README follows.*
+
 # QLog
 
 QLog is an Amateur Radio logging application for Linux, Windows. It

@@ -9,6 +9,7 @@ Build-Depends:
  debhelper (>= 10.0.0),
  debhelper-compat (= 13),
  qtbase5-dev,
+ qtmultimedia5-dev,
  libsqlite3-dev,
  libhamlib-dev,
  libqt5charts5-dev,

@@ -22,6 +22,7 @@ BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: pkg-config
 BuildRequires: qt5-qtbase-devel
+BuildRequires: qt5-qtmultimedia-devel
 BuildRequires: qt5-qtcharts-devel
 BuildRequires: qt5-qtwebengine-devel
 BuildRequires: qt5-qtserialport-devel

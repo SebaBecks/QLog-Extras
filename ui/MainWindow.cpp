@@ -131,11 +131,14 @@ MainWindow::MainWindow(QWidget* parent) :
     ui->dxDockWidget->hide();
     ui->rigDockWidget->hide();
     ui->cwConsoleDockWidget->hide();
+    ui->rigPanelDockWidget->hide();
+    ui->panadapterDockWidget->hide();
     ui->chatDockWidget->hide();
     ui->profileImageDockWidget->hide();
     ui->alertDockWidget->hide();
 
     ui->cwconsoleWidget->registerContactWidget(ui->newContactWidget);
+    ui->rigpanelWidget->registerContactWidget(ui->newContactWidget);
     ui->rotatorWidget->registerContactWidget(ui->newContactWidget);
     ui->chatWidget->registerContactWidget(ui->newContactWidget);
 
@@ -458,6 +461,7 @@ MainWindow::MainWindow(QWidget* parent) :
     connect(ui->newContactWidget, &NewContactWidget::currentModeChanged, ui->onlineMapWidget, &OnlineMapWidget::setHeardMeMode);
 
     connect(ui->dxWidget, &DxWidget::newFilteredSpot, ui->bandmapWidget, &BandmapWidget::addSpot);
+    connect(ui->dxWidget, &DxWidget::newFilteredSpot, ui->panadapterWidget, &PanadapterWidget::addSpot);
     connect(ui->dxWidget, &DxWidget::newFilteredSpot, Rig::instance(), &Rig::sendDXSpot);
     connect(ui->dxWidget, &DxWidget::newSpot, &networknotification, &NetworkNotification::dxSpot);
     connect(ui->dxWidget, &DxWidget::newSpot, &alertEvaluator, &AlertEvaluator::dxSpot);
@@ -472,6 +476,7 @@ MainWindow::MainWindow(QWidget* parent) :
     connect(&alertEvaluator, &AlertEvaluator::spotAlert, &networknotification, &NetworkNotification::spotAlert);
 
     connect(ui->bandmapWidget, &BandmapWidget::tuneDx, ui->newContactWidget, &NewContactWidget::tuneDx);
+    connect(ui->panadapterWidget, &PanadapterWidget::tuneDx, ui->newContactWidget, &NewContactWidget::tuneDx);
     connect(ui->bandmapWidget, &BandmapWidget::nearestSpotFound, ui->newContactWidget, &NewContactWidget::setNearestSpot);
     connect(ui->bandmapWidget, &BandmapWidget::requestNewNonVfoBandmapWindow, this, &MainWindow::openNonVfoBandmap);
 

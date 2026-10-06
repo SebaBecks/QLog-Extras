@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql network xml charts webenginewidgets serialport dbus quickwidgets webchannel websockets printsupport
+QT       += core gui sql network xml charts webenginewidgets serialport dbus quickwidgets webchannel websockets printsupport multimedia
 
 greaterThan(QT_MAJOR_VERSION, 5): QT += widgets
 
@@ -137,6 +137,7 @@ SOURCES += \
         data/SerialPort.cpp \
         data/StationProfile.cpp \
         data/UpdatableSQLRecord.cpp \
+        digi/AudioInput.cpp \
         logformat/AdiFormat.cpp \
         logformat/AdxFormat.cpp \
         logformat/CabrilloFormat.cpp \
@@ -155,6 +156,11 @@ SOURCES += \
         models/SqlListModel.cpp \
         models/WsjtxTableModel.cpp \
         rig/Rig.cpp \
+        rig/OmniRigClient.cpp \
+        rig/OmniRigControls.cpp \
+        rig/OmniRigMeters.cpp \
+        rig/QsoRecorder.cpp \
+        rig/RigctldClient.cpp \
         rig/RigCaps.cpp \
         rig/RigctldManager.cpp \
         rig/drivers/FlrigRigDrv.cpp \
@@ -166,6 +172,10 @@ SOURCES += \
         rotator/drivers/GenericRotDrv.cpp \
         rotator/drivers/HamlibRotDrv.cpp \
         rotator/drivers/PSTRotDrv.cpp \
+        sdr/IqSpectrum.cpp \
+        sdr/RigScopeSource.cpp \
+        sdr/RtlSdrDevice.cpp \
+        sdr/SdrDevice.cpp \
         service/GenericCallbook.cpp \
         service/GenericQSLDownloader.cpp \
         service/GenericQSOUploader.cpp \
@@ -222,6 +232,9 @@ SOURCES += \
         ui/ModeSelectionController.cpp \
         ui/NewContactWidget.cpp \
         ui/OnlineMapWidget.cpp \
+        ui/PanadapterSettingsDialog.cpp \
+        ui/PanadapterView.cpp \
+        ui/PanadapterWidget.cpp \
         ui/PaperQSLDialog.cpp \
         ui/ProfileImageWidget.cpp \
         ui/QSLImportStatDialog.cpp \
@@ -230,6 +243,8 @@ SOURCES += \
         ui/component/QSOFilterDateRangeEdit.cpp \
         ui/QSOFilterDialog.cpp \
         ui/QTableQSOView.cpp \
+        ui/RigPanelWidget.cpp \
+        ui/RigRecordingDialog.cpp \
         ui/RigWidget.cpp \
         ui/RotatorWidget.cpp \
         ui/SettingsDialog.cpp \
@@ -345,6 +360,7 @@ HEADERS += \
         data/StationProfile.h \
         data/ToAllSpot.h \
         data/UpdatableSQLRecord.h \
+        digi/AudioInput.h \
         data/WCYSpot.h \
         data/WWFFEntity.h \
         data/WWVSpot.h \
@@ -353,6 +369,7 @@ HEADERS += \
         data/WsjtxLog.h \
         data/WsjtxLogADIF.h \
         data/WsjtxStatus.h \
+        digi/AudioFormat.h \
         logformat/AdiFormat.h \
         logformat/AdxFormat.h \
         logformat/CabrilloFormat.h \
@@ -371,6 +388,11 @@ HEADERS += \
         models/SqlListModel.h \
         models/WsjtxTableModel.h \
         rig/Rig.h \
+        rig/OmniRigClient.h \
+        rig/OmniRigControls.h \
+        rig/OmniRigMeters.h \
+        rig/QsoRecorder.h \
+        rig/RigctldClient.h \
         rig/RigCaps.h \
         rig/RigctldManager.h \
         rig/drivers/FlrigRigDrv.h \
@@ -384,6 +406,10 @@ HEADERS += \
         rotator/drivers/GenericRotDrv.h \
         rotator/drivers/HamlibRotDrv.h \
         rotator/drivers/PSTRotDrv.h \
+        sdr/IqSpectrum.h \
+        sdr/RigScopeSource.h \
+        sdr/RtlSdrDevice.h \
+        sdr/SdrDevice.h \
         service/GenericCallbook.h \
         service/GenericQSLDownloader.h \
         service/GenericQSOUploader.h \
@@ -444,6 +470,9 @@ HEADERS += \
         ui/OnlineMapWidget.h \
         ui/PaperQSLDialog.h \
         ui/ProfileImageWidget.h \
+        ui/PanadapterSettingsDialog.h \
+        ui/PanadapterView.h \
+        ui/PanadapterWidget.h \
         ui/QSLImportStatDialog.h \
         ui/QSODetailDialog.h \
         ui/QSOFilterDetail.h \
@@ -452,6 +481,8 @@ HEADERS += \
         ui/QTableQSOView.h \
         ui/ShowUploadDialog.h \
         ui/SplashScreen.h \
+        ui/RigPanelWidget.h \
+        ui/RigRecordingDialog.h \
         ui/RigWidget.h \
         ui/RotatorWidget.h \
         ui/SettingsDialog.h \
@@ -523,6 +554,7 @@ FORMS += \
         ui/QSODetailDialog.ui \
         ui/QSOFilterDetail.ui \
         ui/QSOFilterDialog.ui \
+        ui/RigPanelWidget.ui \
         ui/RigWidget.ui \
         ui/RotatorWidget.ui \
         ui/SettingsDialog.ui \
@@ -681,6 +713,7 @@ win32: {
         $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/
 
    SOURCES += \
+        rig/drivers/OmniRigRigFile.cpp \
         rig/drivers/OmnirigRigDrv.cpp \
         rig/drivers/Omnirigv2RigDrv.cpp \
         $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c
@@ -690,6 +723,7 @@ win32: {
         rig/drivers/OmnirigRigDrv.h \
         rig/drivers/Omnirigv2RigDrv.h \
         rig/drivers/OmniRigEventSink.h \
+        rig/drivers/OmniRigRigFile.h \
         $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/sqlite3.h
 
    TARGET = qlog

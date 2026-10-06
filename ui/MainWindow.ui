@@ -105,6 +105,8 @@
     <addaction name="actionClock"/>
     <addaction name="actionChat"/>
     <addaction name="actionCWConsole"/>
+    <addaction name="actionRigPanel"/>
+    <addaction name="actionPanadapter"/>
     <addaction name="actionDXClusterWindow"/>
     <addaction name="actionMapWindow"/>
     <addaction name="actionProfileImage"/>
@@ -282,6 +284,24 @@
     <number>2</number>
    </attribute>
    <widget class="CWConsoleWidget" name="cwconsoleWidget"/>
+  </widget>
+  <widget class="QDockWidget" name="rigPanelDockWidget">
+   <property name="windowTitle">
+    <string>Rig Panel</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="RigPanelWidget" name="rigpanelWidget"/>
+  </widget>
+  <widget class="QDockWidget" name="panadapterDockWidget">
+   <property name="windowTitle">
+    <string>Panadapter</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="PanadapterWidget" name="panadapterWidget"/>
   </widget>
   <widget class="QDockWidget" name="chatDockWidget">
    <property name="windowTitle">
@@ -650,9 +670,25 @@
     <string>Connect &amp;CW Keyer</string>
    </property>
   </action>
+  <action name="actionPanadapter">
+   <property name="text">
+    <string>Panadapter</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
   <action name="actionCWConsole">
    <property name="text">
     <string>CW Console</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRigPanel">
+   <property name="text">
+    <string>Rig Panel</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
@@ -1210,6 +1246,12 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>RigPanelWidget</class>
+   <extends>QWidget</extends>
+   <header>ui/RigPanelWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>RigWidget</class>
    <extends>QWidget</extends>
    <header>ui/RigWidget.h</header>
@@ -1219,6 +1261,12 @@
    <class>OnlineMapWidget</class>
    <extends>QWidget</extends>
    <header>ui/OnlineMapWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PanadapterWidget</class>
+   <extends>QWidget</extends>
+   <header>ui/PanadapterWidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -1667,6 +1715,16 @@
    </hints>
   </connection>
   <connection>
+   <sender>actionPanadapter</sender>
+   <signal>triggered()</signal>
+   <receiver>panadapterDockWidget</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel"><x>-1</x><y>-1</y></hint>
+    <hint type="destinationlabel"><x>835</x><y>585</y></hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>actionCWConsole</sender>
    <signal>triggered()</signal>
    <receiver>cwConsoleDockWidget</receiver>
@@ -2016,6 +2074,16 @@
      <x>456</x>
      <y>312</y>
     </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRigPanel</sender>
+   <signal>triggered()</signal>
+   <receiver>rigPanelDockWidget</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel"><x>-1</x><y>-1</y></hint>
+    <hint type="destinationlabel"><x>835</x><y>585</y></hint>
    </hints>
   </connection>
  </connections>
