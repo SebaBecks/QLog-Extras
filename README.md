@@ -1,6 +1,6 @@
 # QLog Extras (unofficial)
 
-This is an **unofficial** build of [QLog](https://github.com/foldynl/QLog) with a few extras that are not part of the original application. It is maintained by SebaBecks, not by the QLog author.
+This is an **unofficial** build of [QLog](https://github.com/foldynl/QLog) with a few extras that are not part of the original application. It is maintained by Sebastian B. (PA1CYA), not by the QLog author.
 
 > **Support:** the QLog author does not support forks. Report problems with this build here, in [QLog-Extras issues](https://github.com/SebaBecks/QLog-Extras/issues), not in the original QLog repository.
 
