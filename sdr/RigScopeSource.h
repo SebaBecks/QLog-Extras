@@ -29,6 +29,10 @@ public:
     QString lastError() const { return error; }
     // rig name and span, known after the first sweep
     QString description() const;
+    /* Puts back a scope state left changed when rigctld went away before
+       stop(); called by RigctldManager before it stops rigctld and after
+       it starts. Blocks for at most a few seconds. */
+    static void restorePending(quint16 rigctldPort);
 
 signals:
     void lineReady(const QVector<float> &decibels, double firstHz, double binHz);

@@ -56,11 +56,14 @@ private slots:
     void receiverFailed(const QString &reason);
     void spotClicked(int index);
     void showSpots();
+    void rigDisconnected();
+    void rigConnected();
 
 private:
     bool startReceiver();
     bool startRigScope();
     void stopReceiver();
+    void waitForRig();
     bool running() const;
     /* Usable receiver bandwidth or rig scope span, halved. */
     double widestHalf() const;
@@ -100,6 +103,8 @@ private:
     SdrDevice *device = nullptr;
     IqSpectrum *spectrum = nullptr;
     RigScopeSource *scope = nullptr;
+    // the rig's scope was running when the rig went away; start it on reconnect
+    bool resumeScope = false;
     /* Last scope sweep edges; 0 before the first one. */
     double scopeLow = 0.0;
     double scopeHigh = 0.0;

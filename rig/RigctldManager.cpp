@@ -9,6 +9,7 @@
 #include "RigctldManager.h"
 #include "core/debug.h"
 #include "data/SerialPort.h"
+#include "sdr/RigScopeSource.h"
 
 MODULE_IDENTIFICATION("qlog.rig.rigctldmanager");
 
@@ -135,6 +136,10 @@ bool RigctldManager::start(const RigProfile &profile)
     }
 
     qCDebug(runtime) << "rigctld started successfully on port" << currentPort;
+
+    // the panadapter's scope state, if rigctld went away last time before it was put back
+    RigScopeSource::restorePending(currentPort);
+
     emit started();
     return true;
 }
@@ -156,6 +161,11 @@ void RigctldManager::stop()
 
     if ( process->state() != QProcess::NotRunning )
     {
+        /* The panadapter restores the rig's scope through rigctld, but the
+           rig is closed before the panadapter stops; do it while rigctld
+           still runs, or the rig keeps streaming its scope over CI-V. */
+        RigScopeSource::restorePending(currentPort);
+
         qCDebug(runtime) << "Stopping rigctld";
         process->terminate();
         if ( !process->waitForFinished(3000) )

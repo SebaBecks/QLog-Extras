@@ -39,6 +39,8 @@ MODULE_IDENTIFICATION("qlog.ui.panadapterwidget");
 #define MAX_AVERAGE          16
 /* Rig polled 1-2x per second reports a new frequency within this. */
 #define TUNE_SETTLE_MS       1500
+// rigctld streaming the Icom scope rejects commands for its first seconds
+#define SCOPE_RESUME_MS      5000
 /* Same callsign within this distance replaces the older spot. */
 #define SPOT_SAME_HZ         5000.0
 #define SPOT_REFRESH_MS      30000
@@ -154,8 +156,65 @@ PanadapterWidget::PanadapterWidget(QWidget *parent) :
     updateWindow();
     view->setMessage(tr("Press Start to see the band"));
 
+    connect(Rig::instance(), &Rig::rigDisconnected, this, &PanadapterWidget::rigDisconnected);
+    connect(Rig::instance(), &Rig::rigConnected, this, &PanadapterWidget::rigConnected);
+
     if ( settings.value(SETTINGS_RUNNING, false).toBool() )
-        QTimer::singleShot(0, this, [this]() { runButton->setChecked(true); });
+    {
+        // the rig's scope needs rigctld, which only exists once the rig is connected
+        if ( config.connection == PanadapterConfig::RigScope && !Rig::instance()->isRigConnected() )
+            waitForRig();
+        else
+            QTimer::singleShot(0, this, [this]() { runButton->setChecked(true); });
+    }
+}
+
+/* The rig's scope lives on rigctld: stop with the rig, as Stop would, and
+   start again when a rig comes back through Hamlib. */
+void PanadapterWidget::rigDisconnected()
+{
+    FCT_IDENTIFICATION;
+
+    if ( !scope )
+        return;
+
+    stopReceiver();
+    waitForRig();
+}
+
+void PanadapterWidget::rigConnected()
+{
+    FCT_IDENTIFICATION;
+
+    if ( !resumeScope )
+        return;
+
+    const RigProfile profile = RigProfilesManager::instance()->getCurProfile1();
+
+    if ( profile.driver != Rig::HAMLIB_DRIVER || !profile.shareRigctld )
+    {
+        view->setMessage(tr("The rig's scope starts again when a Hamlib rig "
+                            "with Share Rig via port is connected"));
+        return;
+    }
+
+    QTimer::singleShot(SCOPE_RESUME_MS, this, [this]()
+    {
+        if ( resumeScope && Rig::instance()->isRigConnected() )
+            runButton->setChecked(true);
+    });
+}
+
+void PanadapterWidget::waitForRig()
+{
+    FCT_IDENTIFICATION;
+
+    resumeScope = true;
+
+    QSignalBlocker blocker(runButton);
+    runButton->setChecked(false);
+    runButton->setText(tr("Start"));
+    view->setMessage(tr("Waiting for the rig - the scope starts when it connects through Hamlib"));
 }
 
 PanadapterWidget::~PanadapterWidget()
@@ -173,6 +232,9 @@ void PanadapterWidget::runToggled(bool on)
     FCT_IDENTIFICATION;
 
     qCDebug(function_parameters) << on;
+
+    // a press, or the resume itself, settles what waitForRig() left pending
+    resumeScope = false;
 
     if ( on )
     {
@@ -269,6 +331,13 @@ bool PanadapterWidget::startRigScope()
     {
         view->setMessage(tr("The rig's scope comes through rigctld - choose a Hamlib rig "
                             "profile with Share Rig via port"));
+        return false;
+    }
+
+    if ( !Rig::instance()->isRigConnected() )
+    {
+        resumeScope = true;
+        view->setMessage(tr("Waiting for the rig - the scope starts when it connects through Hamlib"));
         return false;
     }
 

@@ -3,6 +3,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSettings>
 #include <QTcpSocket>
 #include <QTimer>
 #include <QUdpSocket>
@@ -15,6 +16,9 @@ MODULE_IDENTIFICATION("qlog.sdr.rigscopesource");
 /* IC-705 sends ~4 sweeps/s. */
 #define SILENCE_MS       5000
 #define CONTROL_WAIT_MS  500
+
+// scope state to put back, kept until it has been restored on the rig
+#define SETTINGS_RESTORE "panadapter/scoperestore"
 
 #define GET_SCOPE        "\\get_func SCOPE"
 #define GET_OUTPUT       "\\get_func SPECTRUM"
@@ -132,11 +136,52 @@ void RigScopeSource::stop()
 
         if ( control->state() != QAbstractSocket::UnconnectedState )
             control->waitForDisconnected(CONTROL_WAIT_MS);
+
+        QSettings().remove(SETTINGS_RESTORE);
     }
 
     control->abort();
     scopeBefore.clear();
     outputBefore.clear();
+}
+
+void RigScopeSource::restorePending(quint16 rigctldPort)
+{
+    FCT_IDENTIFICATION;
+
+    QSettings settings;
+    const QStringList before = settings.value(SETTINGS_RESTORE).toStringList();
+
+    if ( before.size() < 2 )
+        return;
+
+    QTcpSocket link;
+    link.connectToHost(QHostAddress::LocalHost, rigctldPort);
+
+    if ( !link.waitForConnected(1000) )
+    {
+        qCDebug(runtime) << "rigctld not reachable, scope restore kept for later";
+        return;
+    }
+
+    // output first: it is what floods CI-V for programs without async
+    QStringList restore;
+
+    if ( before.at(1) == QLatin1String("0") || before.at(1) == QLatin1String("1") )
+        restore << QStringLiteral(SET_OUTPUT).arg(before.at(1));
+    if ( before.at(0) == QLatin1String("0") || before.at(0) == QLatin1String("1") )
+        restore << QStringLiteral(SET_SCOPE).arg(before.at(0));
+
+    for ( const QString &command : static_cast<const QStringList &>(restore) )
+    {
+        link.write(command.toLatin1() + '\n');
+        link.waitForBytesWritten(CONTROL_WAIT_MS);
+        link.waitForReadyRead(1500);
+        qCDebug(runtime) << "restore" << command << "->" << link.readAll().trimmed();
+    }
+
+    link.disconnectFromHost();
+    settings.remove(SETTINGS_RESTORE);
 }
 
 bool RigScopeSource::isRunning() const
@@ -196,7 +241,13 @@ void RigScopeSource::controlReadyRead()
         if ( command == QLatin1String(GET_SCOPE) )
             scopeBefore = line;
         else if ( command == QLatin1String(GET_OUTPUT) )
+        {
             outputBefore = line;
+
+            // remembered outside this object: rigctld may be gone before stop()
+            if ( scopeBefore == QLatin1String("0") || outputBefore == QLatin1String("0") )
+                QSettings().setValue(SETTINGS_RESTORE, QStringList{ scopeBefore, outputBefore });
+        }
         else if ( line != QLatin1String("RPRT 0") )
             controlError = tr("rigctld refused \"%1\": %2").arg(command, line);
 

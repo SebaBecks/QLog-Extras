@@ -145,8 +145,8 @@ RigRecordingDialog::RigRecordingDialog(QWidget *parent) :
     form->addRow(tr("Start from"), bufferSpin);
 
     QLabel *help = new QLabel(tr("Record from whatever carries the rig's receive "
-                                 "audio into this computer - the same card the "
-                                 "Digi Panel listens to. To have your own voice in "
+                                 "audio into this computer - the same card a digital "
+                                 "mode program listens to. To have your own voice in "
                                  "the recording through the rig, switch its transmit "
                                  "monitor (MONI) on; with it off the rig sends "
                                  "nothing while transmitting. Files are named after "

@@ -681,6 +681,9 @@ void RigPanelWidget::rigDisconnectHandler()
     splitEnabled = false;
     activeVfoIsB = false;
     rigReportsVfo = false;
+    // the next rig may name its VFOs otherwise
+    ui->aCaption->setText(tr("VFO A"));
+    ui->bCaption->setText(tr("VFO B"));
     otherFreq.clear();
     otherMode.clear();
     activeMode.clear();
@@ -1720,6 +1723,10 @@ void RigPanelWidget::loadRigctldSteps(int model)
         vfos |= caps->rx_range_list1[i].vfo;
 
     dualReceiver = ( vfos & ( RIG_VFO_MAIN | RIG_VFO_SUB ) ) != 0;
+
+    // named as the rig names them, until the rig reports its VFO itself
+    ui->aCaption->setText(dualReceiver ? tr("MAIN") : tr("VFO A"));
+    ui->bCaption->setText(dualReceiver ? tr("SUB") : tr("VFO B"));
 
     QList<int> preamp = { 0 };
     QList<int> att = { 0 };
