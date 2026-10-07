@@ -6,23 +6,23 @@ This is an **unofficial** build of [QLog](https://github.com/foldynl/QLog) with 
 
 ## Extras
 
-- **Rig Panel** – an extra dock that shows:
+> **Under active development.** The Rig Panel and the Panadapter are new and still changing; they may be unstable with some rigs or drivers. Keep a backup of your log and report problems in [Issues](https://github.com/SebaBecks/QLog-Extras/issues).
+
+![QLog with the Rig Panel and the Panadapter](docs/img/05-panadapter-01.png)
+
+- **[Rig Panel](docs/rig-panel.md)** – an extra dock with:
   - S meter, power, SWR and ALC;
   - preamp, ATT, AGC, NB and NR, readable and switchable;
-  - VFO A/B, split and tuner.
+  - VFO A/B, split and tuner;
+  - **QSO recording**: REC saves the receive audio to a WAV file named after the QSO, including the 30 s before the press; your own voice can come from a second input, in stereo.
 
-  It works through Hamlib (with *Share Rig via port*) or OmniRig 1 / Omni-Rig V2.
-- **QSO recording** – the REC button saves the receive audio to a WAV file named after the QSO (UTC, callsign, band, mode).
-  - The last 30 s are always buffered, so pressing REC during a QSO still catches its start.
-  - The operator's voice can be added from a second input, recorded as stereo.
-- **Panadapter** – a spectrum and waterfall with DX cluster spots drawn on the signals; a click tunes the rig. The picture comes from:
-  - an RTL-SDR on the rig's IF output or RX OUT;
-  - or the rig's own scope through Hamlib (IC-705, IC-7300, IC-9700, IC-7610 and similar Icoms).
-- **OmniRig CW/CWR fix** – CW follows the rig's normal CW, read from the OmniRig rig file. This fix was also offered to the original QLog.
+  It works through Hamlib (with *Share Rig via port*) or OmniRig.
+- **[Panadapter](docs/panadapter.md)** – a spectrum and waterfall with DX cluster spots on the signals; a click tunes the rig. The picture comes from an RTL-SDR on the rig's IF output or RX OUT, or from the rig's own scope through Hamlib (IC-705, IC-7300, IC-9700, IC-7610 and similar Icoms).
+- **[OmniRig](docs/omnirig.md)** – the Rig Panel and the Panadapter work through OmniRig too, and CW now selects the rig's normal CW instead of the reverse.
 
 The database is the same as QLog 0.53.0 (no migration), so you can switch back to the official QLog at any time.
 
-Only features tested on real rigs are published here. Tested on Windows 11 with a Yaesu FTdx101MP and an Icom IC-705.
+Tested on Windows 11 with a Yaesu FTdx101MP and an Icom IC-705.
 
 ## Download
 
