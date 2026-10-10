@@ -704,6 +704,8 @@ macx: {
    LIBS += -L/usr/local/lib -L/opt/homebrew/lib -lhamlib -lsqlite3 -lz -L/opt/local/lib -lssl -lcrypto
    equals(QT_MAJOR_VERSION, 6): LIBS += -lqt6keychain
    equals(QT_MAJOR_VERSION, 5): LIBS += -lqt5keychain
+   # Adds the microphone permission text (REC, Digi Panel)
+   QMAKE_INFO_PLIST = res/macos/Info.plist
    DISTFILES +=
 }
 

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <QCoreApplication>
 
 #include "RtlSdrDevice.h"
 #include "core/debug.h"
@@ -93,12 +94,21 @@ bool RtlSdrDevice::load()
 
     /* Windows searches QLog's folder first (deployed DLL). Linux distros ship
        librtlsdr.so.0, manual installs often lack the version suffix. */
-    bool loaded;
+    bool loaded = false;
 
     if ( chosenPath.isEmpty() )
     {
-        library.setFileNameAndVersion(QStringLiteral("rtlsdr"), 0);
+#ifdef Q_OS_MACOS
+        /* The DMG bundles librtlsdr; dlopen does not search the app bundle. */
+        library.setFileName(QCoreApplication::applicationDirPath()
+                            + QStringLiteral("/../Frameworks/librtlsdr.0.dylib"));
         loaded = library.load();
+#endif
+        if ( !loaded )
+        {
+            library.setFileNameAndVersion(QStringLiteral("rtlsdr"), 0);
+            loaded = library.load();
+        }
         if ( !loaded )
         {
             library.setFileName(QStringLiteral("rtlsdr"));
