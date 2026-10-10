@@ -700,8 +700,17 @@ macx: {
       INSTALLS += target
    }
 
+   # Qt's SQLite driver bundles its own SQLite; functions registered through
+   # a different SQLite version crash, so build the same version into QLog
+   !isEmpty(SQLITESRCPATH) {
+      INCLUDEPATH = $$SQLITESRCPATH $$INCLUDEPATH
+      SOURCES += $$SQLITESRCPATH/sqlite3.c
+   } else {
+      LIBS += -lsqlite3
+   }
+
    INCLUDEPATH += /usr/local/include /opt/homebrew/include /opt/local/include
-   LIBS += -L/usr/local/lib -L/opt/homebrew/lib -lhamlib -lsqlite3 -lz -L/opt/local/lib -lssl -lcrypto
+   LIBS += -L/usr/local/lib -L/opt/homebrew/lib -lhamlib -lz -L/opt/local/lib -lssl -lcrypto
    equals(QT_MAJOR_VERSION, 6): LIBS += -lqt6keychain
    equals(QT_MAJOR_VERSION, 5): LIBS += -lqt5keychain
    # Adds the microphone permission text (REC, Digi Panel)

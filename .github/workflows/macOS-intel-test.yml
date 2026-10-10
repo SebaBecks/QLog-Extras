@@ -16,6 +16,8 @@ env:
   QTKEYCHAIN_VERSION: "0.15.0"
   LIBUSB_VERSION: "1.0.29"
   RTLSDR_VERSION: "v2.0.2"
+  # Must match the SQLite inside Qt's driver (qtbase/src/3rdparty/sqlite)
+  SQLITE_AMALGAMATION: "2025/sqlite-amalgamation-3490100"
 
 defaults:
   run:
@@ -112,11 +114,15 @@ jobs:
 
     - name: Build QLog
       run: |
+        curl -sSL -o "$RUNNER_TEMP/sqlite.zip" "https://www.sqlite.org/$SQLITE_AMALGAMATION.zip"
+        unzip -q -o "$RUNNER_TEMP/sqlite.zip" -d "$RUNNER_TEMP"
+        SQLITESRC="$RUNNER_TEMP/$(basename "$SQLITE_AMALGAMATION")"
+        grep -m1 "define SQLITE_VERSION " "$SQLITESRC/sqlite3.h"
         mkdir qlog-build
         cd qlog-build
         qmake -config release ../QLog.pro \
           QMAKE_MACOSX_DEPLOYMENT_TARGET=13.0 QMAKE_APPLE_DEVICE_ARCHS=x86_64 \
-          "INCLUDEPATH+=$DEPS/include" "LIBS+=-L$DEPS/lib" \
+          "INCLUDEPATH+=$DEPS/include" "LIBS+=-L$DEPS/lib" "SQLITESRCPATH=$SQLITESRC" \
           HAMLIBVERSION_MAJOR=4 HAMLIBVERSION_MINOR=7 HAMLIBVERSION_PATCH=2
         make -j4
 
@@ -153,6 +159,10 @@ jobs:
             bad=1
           fi
         done < <(find qlog.app -type f)
+        if otool -arch x86_64 -L qlog.app/Contents/MacOS/qlog | grep -q libsqlite3; then
+          echo "::error::qlog links the system SQLite, not the one matching Qt"
+          bad=1
+        fi
         otool -L qlog.app/Contents/MacOS/qlog
         exit $bad
 
