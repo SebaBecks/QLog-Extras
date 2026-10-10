@@ -47,7 +47,15 @@ jobs:
         command -v pkg-config || brew install pkgconf
         cmake --version | head -1
 
+    - name: Cache libraries
+      id: deps
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.DEPS }}
+        key: macos13-intel-${{ env.QT_VERSION }}-${{ env.OPENSSL_VERSION }}-${{ env.HAMLIB_VERSION }}-${{ env.QTKEYCHAIN_VERSION }}-${{ env.LIBUSB_VERSION }}-${{ env.RTLSDR_VERSION }}
+
     - name: Build OpenSSL
+      if: steps.deps.outputs.cache-hit != 'true'
       working-directory: ${{ runner.temp }}
       run: |
         curl -sSL "https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz" | tar xz
@@ -57,6 +65,7 @@ jobs:
         make install_sw
 
     - name: Build Hamlib
+      if: steps.deps.outputs.cache-hit != 'true'
       working-directory: ${{ runner.temp }}
       run: |
         curl -sSL "https://github.com/Hamlib/Hamlib/releases/download/$HAMLIB_VERSION/hamlib-$HAMLIB_VERSION.tar.gz" | tar xz
@@ -66,6 +75,7 @@ jobs:
         make install
 
     - name: Build QtKeychain
+      if: steps.deps.outputs.cache-hit != 'true'
       working-directory: ${{ runner.temp }}
       run: |
         git clone --depth 1 --branch "$QTKEYCHAIN_VERSION" https://github.com/frankosterfeld/qtkeychain.git
@@ -78,6 +88,7 @@ jobs:
         cmake --install qtkeychain/build
 
     - name: Build librtlsdr
+      if: steps.deps.outputs.cache-hit != 'true'
       working-directory: ${{ runner.temp }}
       run: |
         curl -sSL "https://github.com/libusb/libusb/releases/download/v$LIBUSB_VERSION/libusb-$LIBUSB_VERSION.tar.bz2" | tar xj
@@ -94,8 +105,8 @@ jobs:
 
     - name: Build QLog
       run: |
-        mkdir build
-        cd build
+        mkdir qlog-build
+        cd qlog-build
         qmake -config release ../QLog.pro \
           QMAKE_MACOSX_DEPLOYMENT_TARGET=13.0 QMAKE_APPLE_DEVICE_ARCHS=x86_64 \
           "INCLUDEPATH+=$DEPS/include" "LIBS+=-L$DEPS/lib" \
@@ -103,7 +114,7 @@ jobs:
         make -j4
 
     - name: Bundle
-      working-directory: build
+      working-directory: qlog-build
       run: |
         macdeployqt qlog.app -executable=./qlog.app/Contents/MacOS/qlog -verbose=1
         # librtlsdr is loaded at runtime, so macdeployqt does not see it
@@ -116,7 +127,7 @@ jobs:
         codesign --force --deep -s - qlog.app
 
     - name: Check minimum macOS and library paths
-      working-directory: build
+      working-directory: qlog-build
       run: |
         bad=0
         while IFS= read -r f; do
@@ -135,7 +146,7 @@ jobs:
         exit $bad
 
     - name: Build DMG
-      working-directory: build
+      working-directory: qlog-build
       run: |
         hdiutil create -volname QLog -srcfolder qlog.app -ov -format UDZO QLog-Extras-macos13-intel-test.dmg
 
@@ -143,4 +154,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: QLog-Extras-macos13-intel-test
-        path: build/QLog-Extras-macos13-intel-test.dmg
+        path: qlog-build/QLog-Extras-macos13-intel-test.dmg
