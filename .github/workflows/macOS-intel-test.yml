@@ -49,7 +49,7 @@ jobs:
 
     - name: Cache libraries
       id: deps
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: ${{ env.DEPS }}
         key: macos13-intel-${{ env.QT_VERSION }}-${{ env.OPENSSL_VERSION }}-${{ env.HAMLIB_VERSION }}-${{ env.QTKEYCHAIN_VERSION }}-${{ env.LIBUSB_VERSION }}-${{ env.RTLSDR_VERSION }}
@@ -102,6 +102,13 @@ jobs:
         cmake --build rtl-sdr/build --parallel 4
         cmake --install rtl-sdr/build
         ls -l "$DEPS/lib"
+
+    - name: Save libraries
+      if: steps.deps.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.DEPS }}
+        key: ${{ steps.deps.outputs.cache-primary-key }}
 
     - name: Build QLog
       run: |
