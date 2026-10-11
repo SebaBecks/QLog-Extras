@@ -13,6 +13,8 @@ env:
   QT_VERSION: "6.8.3"
   OPENSSL_VERSION: "3.0.22"
   HAMLIB_VERSION: "4.7.2"
+  # Bump when the Hamlib patch below changes, so the cache is rebuilt
+  HAMLIB_PATCH: "async-open-1"
   QTKEYCHAIN_VERSION: "0.15.0"
   LIBUSB_VERSION: "1.0.29"
   RTLSDR_VERSION: "v2.0.2"
@@ -54,7 +56,7 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.DEPS }}
-        key: macos13-intel-${{ env.QT_VERSION }}-${{ env.OPENSSL_VERSION }}-${{ env.HAMLIB_VERSION }}-${{ env.QTKEYCHAIN_VERSION }}-${{ env.LIBUSB_VERSION }}-${{ env.RTLSDR_VERSION }}
+        key: macos13-intel-${{ env.QT_VERSION }}-${{ env.OPENSSL_VERSION }}-${{ env.HAMLIB_VERSION }}-${{ env.HAMLIB_PATCH }}-${{ env.QTKEYCHAIN_VERSION }}-${{ env.LIBUSB_VERSION }}-${{ env.RTLSDR_VERSION }}
 
     - name: Build OpenSSL
       if: steps.deps.outputs.cache-hit != 'true'
@@ -72,6 +74,12 @@ jobs:
       run: |
         curl -sSL "https://github.com/Hamlib/Hamlib/releases/download/$HAMLIB_VERSION/hamlib-$HAMLIB_VERSION.tar.gz" | tar xz
         cd "hamlib-$HAMLIB_VERSION"
+        # With async=1, rig_open reads replies from the sync pipe before the
+        # thread that fills it starts; on POSIX the rig never answers. Read the
+        # port directly until the async handler is running.
+        before=$(grep -c -E '^    rp->asyncio = (0|rs->async_data_enabled);$' src/rig.c)
+        perl -0pi -e 's/(\n    int retry_save = rp->retry;\n)/\n    rp->asyncio = 0;$1/; s/(\n    status = async_data_handler_start\(rig\);\n)/\n    rp->asyncio = rs->async_data_enabled;$1/' src/rig.c
+        test "$(grep -c -E '^    rp->asyncio = (0|rs->async_data_enabled);$' src/rig.c)" = $((before + 2))
         ./configure --prefix="$DEPS" --disable-static --without-readline --without-libusb --without-cxx-binding
         make -j4
         make install
