@@ -43,6 +43,9 @@ public slots:
     void rigConnectHandler();
     void rigDisconnectHandler();
 
+protected:
+    bool event(QEvent *event) override;
+
 private slots:
     void frequencyChanged(VFOID vfoid, double vfoFreq, double ritFreq, double xitFreq);
     void modeChanged(VFOID vfoid, const QString &rawMode, const QString &mode,
@@ -95,6 +98,9 @@ private:
     void showStrengthInline();
     void clearRigState();
     void buildStateButtons();
+    // Filter, S cal and S9+ move to a second row when the panel is narrow
+    void placeSettings();
+    bool settingsWrapped = false;
     // write, then read back, so the button shows what the rig actually did
     void setRigLevel(const QString &name, int value);
     void setRigFunc(const QString &name, bool on);

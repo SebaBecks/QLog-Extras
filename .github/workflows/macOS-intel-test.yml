@@ -137,6 +137,11 @@ jobs:
         install_name_tool -id @executable_path/../Frameworks/libusb-1.0.0.dylib "$FW/libusb-1.0.0.dylib"
         install_name_tool -id @executable_path/../Frameworks/librtlsdr.0.dylib "$FW/librtlsdr.0.dylib"
         install_name_tool -change "$DEPS/lib/libusb-1.0.0.dylib" @loader_path/libusb-1.0.0.dylib "$FW/librtlsdr.0.dylib"
+        # rigctld next to qlog: needed to share the rig and for the rig's scope
+        cp "$DEPS/bin/rigctld" qlog.app/Contents/MacOS/rigctld
+        chmod u+w qlog.app/Contents/MacOS/rigctld
+        install_name_tool -change "$DEPS/lib/libhamlib.4.dylib" @executable_path/../Frameworks/libhamlib.4.dylib qlog.app/Contents/MacOS/rigctld
+        otool -L qlog.app/Contents/MacOS/rigctld
         # QLog uses SQLite only; these drivers need libraries outside the bundle
         rm -f qlog.app/Contents/PlugIns/sqldrivers/libqsqlodbc.dylib qlog.app/Contents/PlugIns/sqldrivers/libqsqlmimer.dylib
         codesign --force --deep -s - qlog.app

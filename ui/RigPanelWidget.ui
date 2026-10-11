@@ -196,50 +196,70 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="filterCaption">
-       <property name="text"><string>Filter</string></property>
+      <widget class="QWidget" name="settingsBox">
+       <layout class="QHBoxLayout" name="settingsLayout">
+        <property name="leftMargin"><number>0</number></property>
+        <property name="topMargin"><number>0</number></property>
+        <property name="rightMargin"><number>0</number></property>
+        <property name="bottomMargin"><number>0</number></property>
+        <item>
+         <widget class="QLabel" name="filterCaption">
+          <property name="text"><string>Filter</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="filterCombo">
+          <property name="toolTip"><string>Receive filter width</string></property>
+          <property name="minimumSize"><size><width>104</width><height>0</height></size></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="calCaption">
+          <property name="text"><string>S cal</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="calSpinBox">
+          <property name="toolTip"><string>Correction applied to the strength reading. The calibration table Hamlib holds for a rig can sit a little off the rig's own meter; six decibels is one S unit.</string></property>
+          <property name="suffix"><string> dB</string></property>
+          <property name="minimum"><number>-30</number></property>
+          <property name="maximum"><number>30</number></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="gainCaption">
+          <property name="text"><string>S9+</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="gainSpinBox">
+          <property name="toolTip"><string>Slope correction above S9. Hamlib reads the rig's raw meter and converts it on a scale of its own, which on some rigs runs flatter above S9 than the rig's own face does - so the stronger the signal, the wider the gap. Set this until a strong station reads the same here as on the rig. One means no correction.</string></property>
+          <property name="prefix"><string>x </string></property>
+          <property name="decimals"><number>1</number></property>
+          <property name="singleStep"><double>0.1</double></property>
+          <property name="minimum"><double>1.0</double></property>
+          <property name="maximum"><double>5.0</double></property>
+          <property name="value"><double>1.0</double></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="sourceLabel">
+          <property name="text"><string/></property>
+          <property name="toolTip"><string>Shown only when the meters cannot be read</string></property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="wrapLayout">
      <item>
-      <widget class="QComboBox" name="filterCombo">
-       <property name="toolTip"><string>Receive filter width</string></property>
-       <property name="minimumSize"><size><width>104</width><height>0</height></size></property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="calCaption">
-       <property name="text"><string>S cal</string></property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="calSpinBox">
-       <property name="toolTip"><string>Correction applied to the strength reading. The calibration table Hamlib holds for a rig can sit a little off the rig's own meter; six decibels is one S unit.</string></property>
-       <property name="suffix"><string> dB</string></property>
-       <property name="minimum"><number>-30</number></property>
-       <property name="maximum"><number>30</number></property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="gainCaption">
-       <property name="text"><string>S9+</string></property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="gainSpinBox">
-       <property name="toolTip"><string>Slope correction above S9. Hamlib reads the rig's raw meter and converts it on a scale of its own, which on some rigs runs flatter above S9 than the rig's own face does - so the stronger the signal, the wider the gap. Set this until a strong station reads the same here as on the rig. One means no correction.</string></property>
-       <property name="prefix"><string>x </string></property>
-       <property name="decimals"><number>1</number></property>
-       <property name="singleStep"><double>0.1</double></property>
-       <property name="minimum"><double>1.0</double></property>
-       <property name="maximum"><double>5.0</double></property>
-       <property name="value"><double>1.0</double></property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="sourceLabel">
-       <property name="text"><string/></property>
-       <property name="toolTip"><string>Shown only when the meters cannot be read</string></property>
-      </widget>
+      <spacer name="wrapSpacer">
+       <property name="orientation"><enum>Qt::Horizontal</enum></property>
+       <property name="sizeHint" stdset="0"><size><width>0</width><height>0</height></size></property>
+      </spacer>
      </item>
     </layout>
    </item>
