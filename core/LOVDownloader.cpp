@@ -315,10 +315,13 @@ void LOVDownloader::parseCTY(const SourceDefinition &sourceDef, QTextStream &dat
     }
 
     unsigned int count = 0;
+    // QTextStream::pos() re-reads the buffer byte by byte; far too slow on Android
+    qint64 processed = 0;
 
     while ( !data.atEnd() && !abortRequested )
     {
         const QString &line = data.readLine();
+        processed += line.size() + 1;
         const QStringList &fields = line.split(',');
 
         if ( fields.count() != 10 )
@@ -399,11 +402,11 @@ void LOVDownloader::parseCTY(const SourceDefinition &sourceDef, QTextStream &dat
 
         if ( count% 20 == 0 )
         {
-            emit progress(data.pos());
+            emit progress(processed);
             QCoreApplication::processEvents();
         }
 
-        emit progress(data.pos());
+        emit progress(processed);
         QCoreApplication::processEvents();
     }
 
@@ -439,10 +442,12 @@ void LOVDownloader::parseSATLIST(const SourceDefinition &sourceDef, QTextStream 
     QSqlRecord entityRecord = entityTableModel.record();
 
     int count = 0;
+    qint64 processed = 0;
 
     while ( !data.atEnd() && !abortRequested )
     {
         QString line = data.readLine();
+        processed += line.size() + 1;
         QStringList fields = line.split(';');
 
         if ( fields.count() != 8 )
@@ -472,7 +477,7 @@ void LOVDownloader::parseSATLIST(const SourceDefinition &sourceDef, QTextStream 
         {
             count++;
         }
-        emit progress(data.pos());
+        emit progress(processed);
         QCoreApplication::processEvents();
     }
 
@@ -783,10 +788,12 @@ void LOVDownloader::parseMembershipContent(const SourceDefinition &sourceDef, QT
     QSqlRecord entityRecord = entityTableModel.record();
 
     int count = 0;
+    qint64 processed = 0;
 
     while ( !data.atEnd() && !abortRequested )
     {
         QString line = data.readLine();
+        processed += line.size() + 1;
         QStringList fields = line.split(',');
 
         if ( fields.count() != 5 )
@@ -813,7 +820,7 @@ void LOVDownloader::parseMembershipContent(const SourceDefinition &sourceDef, QT
         {
             count++;
         }
-        emit progress(data.pos());
+        emit progress(processed);
         QCoreApplication::processEvents();
     }
 
