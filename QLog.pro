@@ -633,7 +633,7 @@ isEmpty(HAMLIBVERSION_PATCH){
    LIBS += -L$$OPENSSLLIBPATH
 }
 
-unix:!macx {
+unix:!macx:!android {
    isEmpty(PREFIX) {
      PREFIX = /usr/local
    }
@@ -702,6 +702,49 @@ win32: {
 
    DEFINES += WIN32_LEAN_AND_MEAN
    DEFINES += ZD_EXPORT=
+}
+
+android {
+   # No Qt WebEngine and no D-Bus on Android; maps show a placeholder
+   QT -= webenginewidgets dbus
+   INCLUDEPATH += $$PWD/android/webengine-stub
+   HEADERS += android/webengine-stub/qwebenginestub.h \
+        android/AndroidSupport.h
+   SOURCES += android/AndroidSupport.cpp
+
+   INCLUDEPATH += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/
+   SOURCES += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c
+
+   # QtKeychain sources (qtkeychain/qtkeychain directory) built into the app
+   isEmpty(QTKEYCHAINSRCPATH): error("Set QTKEYCHAINSRCPATH to the qtkeychain/qtkeychain source directory")
+   INCLUDEPATH += $$PWD/android/qtkeychain $$QTKEYCHAINSRCPATH
+   SOURCES += \
+        $$QTKEYCHAINSRCPATH/keychain.cpp \
+        $$QTKEYCHAINSRCPATH/keychain_android.cpp \
+        $$QTKEYCHAINSRCPATH/androidkeystore.cpp \
+        $$QTKEYCHAINSRCPATH/plaintextstore.cpp
+   HEADERS += \
+        $$QTKEYCHAINSRCPATH/keychain.h \
+        $$QTKEYCHAINSRCPATH/keychain_p.h \
+        $$QTKEYCHAINSRCPATH/androidkeystore_p.h \
+        $$QTKEYCHAINSRCPATH/plaintextstore_p.h
+
+   # OpenSSL 3 from KDAB android_openssl (ANDROIDOPENSSLPATH = repo root)
+   isEmpty(ANDROIDOPENSSLPATH): error("Set ANDROIDOPENSSLPATH to the android_openssl checkout")
+   INCLUDEPATH += $$ANDROIDOPENSSLPATH/ssl_3/include
+   OPENSSLANDROIDLIBS = \
+        $$ANDROIDOPENSSLPATH/ssl_3/$$ANDROID_TARGET_ARCH/libssl_3.so \
+        $$ANDROIDOPENSSLPATH/ssl_3/$$ANDROID_TARGET_ARCH/libcrypto_3.so
+   LIBS += $$OPENSSLANDROIDLIBS
+   ANDROID_EXTRA_LIBS += $$OPENSSLANDROIDLIBS
+
+   # Static Hamlib for the target ABI (HAMLIBLIBPATH, HAMLIBINCLUDEPATH)
+   LIBS += -lhamlib -lz -landroid -llog
+
+   ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android/package
+   ANDROID_MIN_SDK_VERSION = 28
+   ANDROID_TARGET_SDK_VERSION = 34
+   ANDROID_VERSION_NAME = $$VERSION
 }
 
 DEFINES += HAMLIBVERSION_MAJOR=$$HAMLIBVERSION_MAJOR

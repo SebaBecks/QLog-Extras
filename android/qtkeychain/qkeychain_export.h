@@ -1,0 +1,4 @@
+#ifndef QKEYCHAIN_EXPORT_H
+#define QKEYCHAIN_EXPORT_H
+#define QKEYCHAIN_EXPORT
+#endif

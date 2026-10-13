@@ -17,6 +17,12 @@
 
 MODULE_IDENTIFICATION("qlog.ui.exportdialog");
 
+// Android document picker result; not a filesystem path
+static bool isContentUri(const QString &filename)
+{
+    return filename.startsWith(QLatin1String("content:"));
+}
+
 ExportDialog::ExportDialog(QWidget *parent) :
    ExportDialog(QList<QSqlRecord>(), parent)
 {
@@ -82,7 +88,10 @@ void ExportDialog::browse()
     QFileDialog dialog(this, windowTitle(), lastPath, exportFileFilter(format));
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     dialog.setFileMode(QFileDialog::AnyFile);
+#ifndef Q_OS_ANDROID
+    // On Android the picker returns a content:// URI; a suffix would break it
     dialog.setDefaultSuffix(exportFileSuffix(format));
+#endif
     // The final target can also change when the export format is changed.
     // Confirm overwrites centrally in runExport() for the actual target path.
     dialog.setOption(QFileDialog::DontConfirmOverwrite);
@@ -184,7 +193,8 @@ void ExportDialog::runExport()
         return;
     }
 
-    if ( QFileInfo::exists(filename) )
+    // The Android picker creates the document itself and handles overwriting
+    if ( !isContentUri(filename) && QFileInfo::exists(filename) )
     {
         const QMessageBox::StandardButton answer = QMessageBox::question(
             this,
@@ -505,7 +515,7 @@ void ExportDialog::exportFormatChanged(const QString &format)
         ui->exportTypeCombo->setEnabled(true);
     }
 
-    if ( ui->fileEdit->text().isEmpty() )
+    if ( ui->fileEdit->text().isEmpty() || isContentUri(ui->fileEdit->text()) )
         return;
 
     const QFileInfo fileInfo(ui->fileEdit->text());

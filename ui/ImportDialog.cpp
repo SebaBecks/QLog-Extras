@@ -108,11 +108,18 @@ void ImportDialog::browse()
     const QString &lastPath = ( ui->fileEdit->text().isEmpty() ) ? settings.value("import/last_path", QDir::homePath()).toString()
                                                                  : ui->fileEdit->text();
 
+#ifdef Q_OS_ANDROID
+    // The Android picker filters by MIME type, which .adi/.adx files do not have
+    const QString fileFilter;
+#else
+    const QString fileFilter = ui->typeSelect->currentText().toUpper() + "(*." + ui->typeSelect->currentText().toLower() + ")";
+#endif
+
     QString filename = QFileDialog::getOpenFileName(this, tr("Select File"),
                                                     lastPath,
-                                                    ui->typeSelect->currentText().toUpper() + "(*." + ui->typeSelect->currentText().toLower() + ")",
+                                                    fileFilter,
                                                     nullptr,
-#if defined(Q_OS_LINUX) && !(defined(QLOG_FLATPAK) && defined(Q_PROCESSOR_ARM_64))
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && !(defined(QLOG_FLATPAK) && defined(Q_PROCESSOR_ARM_64))
                                                     // Do not use the Native Dialog under Linux because the dialog is case-sensitive.
                                                     // QT variant looks different but it is case-insensitive.
                                                     // More information:

@@ -26,6 +26,9 @@
 #include "data/Data.h"
 #include "service/GenericCallbook.h"
 #include "core/LogDatabase.h"
+#ifdef Q_OS_ANDROID
+#include "android/AndroidSupport.h"
+#endif
 
 MODULE_IDENTIFICATION("qlog.core.main");
 
@@ -328,8 +331,14 @@ int main(int argc, char* argv[])
         stylePresent = QString(argv[i]).contains("-style");
     }
 
+#ifdef Q_OS_ANDROID
+    AndroidSupport::beforeApplication();
+#endif
     QApplication app(argc, argv);
     app.setApplicationVersion(VERSION);
+#ifdef Q_OS_ANDROID
+    AndroidSupport::install(&app);
+#endif
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QCoreApplication::tr("QLog Help"));
@@ -428,6 +437,8 @@ int main(int argc, char* argv[])
      * Therefore, in the case of two or more instances,
      * there is a port conflict.
      */
+#ifndef Q_OS_ANDROID
+    // Android blocks System V IPC (seccomp) and runs one instance per app anyway
     AppGuard guard( "QLog" );
     if ( !guard.tryToRun() )
     {
@@ -435,6 +446,7 @@ int main(int argc, char* argv[])
                               QMessageBox::tr("QLog is already running"));
         return 1;
     }
+#endif
 
     QPixmap pixmap(":/res/qlog.png");
     SplashScreen splash(pixmap);
