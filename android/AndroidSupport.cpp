@@ -3,6 +3,7 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QScreen>
+#include <QTimer>
 #include <QWindow>
 
 #include "AndroidSupport.h"
@@ -11,6 +12,9 @@ void AndroidSupport::beforeApplication()
 {
     // The native Android menu has no visible entry point; draw QLog's menu bar in the window
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+
+    // Without it Qt ignores ImhNoPredictiveText and keyboards keep composing words
+    qputenv("QT_ANDROID_ENABLE_WORKAROUND_TO_DISABLE_PREDICTIVE_TEXT", "1");
 }
 
 void AndroidSupport::install(QApplication *app)
@@ -78,6 +82,36 @@ bool AndroidSupport::eventFilter(QObject *obj, QEvent *event)
         }
     }
 
+    // Android keyboards compose whole words and Qt 6.8 merges them wrongly into
+    // text already in the field (TEST1 -> TEST1TEST1we); type letter by letter
+    if ( event->type() == QEvent::Polish )
+    {
+        QWidget *widget = qobject_cast<QWidget *>(obj);
+
+        if ( widget && widget->testAttribute(Qt::WA_InputMethodEnabled) )
+            widget->setInputMethodHints(widget->inputMethodHints() | Qt::ImhNoPredictiveText);
+    }
+
+    // While the keyboard is open, Qt 6.8 does not show partial repaints of
+    // dialogs (typed text stays invisible); repaint the whole dialog instead
+    switch ( event->type() )
+    {
+    case QEvent::KeyPress:
+    case QEvent::InputMethod:
+    case QEvent::FocusIn:
+    case QEvent::MouseButtonRelease:
+    {
+        QWidget *widget = qobject_cast<QWidget *>(obj);
+        QWidget *window = widget ? widget->window() : nullptr;
+
+        if ( qobject_cast<QDialog *>(window) )
+            QTimer::singleShot(0, window, [window]() { window->update(); });
+        break;
+    }
+    default:
+        break;
+    }
+
     // A dialog taller than the screen loses its buttons and Android scales it,
     // which breaks touch again. Keep dialogs within the available area.
     if ( event->type() == QEvent::Show )
@@ -92,7 +126,7 @@ bool AndroidSupport::eventFilter(QObject *obj, QEvent *event)
                  || dialog->height() > available.height() )
             {
                 dialog->setMinimumSize(dialog->minimumSize().boundedTo(available.size()));
-                dialog->setGeometry(available);
+                dialog->setWindowState(dialog->windowState() | Qt::WindowMaximized);
             }
         }
     }
