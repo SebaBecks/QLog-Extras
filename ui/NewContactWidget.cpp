@@ -1781,6 +1781,31 @@ bool NewContactWidget::eventFilter(QObject *object, QEvent *event)
         }
     }
 
+#ifdef Q_OS_ANDROID
+    // Tablet keyboards have Enter right under the thumb: Enter walks Callsign ->
+    // RSTs -> RSTr -> Name and only Enter in the last field saves the QSO
+    if ( event->type() == QEvent::KeyPress
+         && ( static_cast<QKeyEvent *>(event)->key() == Qt::Key_Return
+              || static_cast<QKeyEvent *>(event)->key() == Qt::Key_Enter ) )
+    {
+        QWidget *next = nullptr;
+
+        if ( object == ui->callsignEdit )
+            next = ui->rstSentEdit;
+        else if ( object == ui->rstSentEdit )
+            next = ui->rstRcvdEdit;
+        else if ( object == ui->rstRcvdEdit && uiDynamic->nameEdit->isVisible() )
+            next = uiDynamic->nameEdit;
+
+        if ( next )
+        {
+            // Queued so Callsign still handles its own Enter (callbook search)
+            QTimer::singleShot(0, next, [next]() { next->setFocus(Qt::TabFocusReason); });
+            return false;
+        }
+    }
+#endif
+
     // Event handle to handle Enter press event for the Custom UI row.
     // The basic idea is:
     //   - if enter is pressed on the Row A or Row B or RSTr(s) and QSO Timer is active then QSO is saved
@@ -4527,7 +4552,12 @@ void NewContactWidget::setCallbookStatusEnabled(bool callbookEnabled)
     else
     {
         ui->callbookStatusButton->setToolTip(tr("Callbook search is active"));
+#ifdef Q_OS_ANDROID
+        // Android always filters Callsign: Enter moves to RSTs there
+        ui->callsignEdit->installEventFilter(this);
+#else
         ui->callsignEdit->removeEventFilter(this);
+#endif
     }
 }
 
