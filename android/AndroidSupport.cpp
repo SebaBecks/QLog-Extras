@@ -39,8 +39,8 @@ bool AndroidSupport::repost(QWindow *window, QEvent *original, QEvent *fixed)
 
 bool AndroidSupport::eventFilter(QObject *obj, QEvent *event)
 {
-    // Qt 6.8 on Android subtracts a window's position in logical instead of
-    // device pixels, so taps in menus and dialogs land pos*(dpr-1)/dpr too far
+    // Qt 6.8 on Android adds a window's logical position to device-pixel touch
+    // coordinates, so taps in menus and dialogs land pos/dpr too far
     QWindow *window = reposted.contains(event) ? nullptr : qobject_cast<QWindow *>(obj);
 
     if ( window && (event->type() == QEvent::TouchBegin || event->type() == QEvent::MouseButtonPress) )
@@ -52,7 +52,7 @@ bool AndroidSupport::eventFilter(QObject *obj, QEvent *event)
          && window->position() != QPoint(0, 0) && window->devicePixelRatio() > 1.0 )
     {
         const qreal dpr = window->devicePixelRatio();
-        const QPointF shift = QPointF(window->position()) * (dpr - 1.0) / dpr;
+        const QPointF shift = QPointF(window->position()) / dpr;
 
         switch ( event->type() )
         {
