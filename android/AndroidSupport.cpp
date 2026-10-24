@@ -39,7 +39,13 @@ bool AndroidSupport::eventFilter(QObject *obj, QEvent *event)
     // device pixels, so taps in menus and dialogs land pos*(dpr-1)/dpr too far
     QWindow *window = reposted.contains(event) ? nullptr : qobject_cast<QWindow *>(obj);
 
-    if ( window && window->position() != QPoint(0, 0) && window->devicePixelRatio() > 1.0 )
+    if ( window && (event->type() == QEvent::TouchBegin || event->type() == QEvent::MouseButtonPress) )
+        pressWindow = window;
+
+    // A touch that opens a popup (combo box list) ends in the popup window,
+    // where Qt maps it correctly; shifting it would close the popup at once
+    if ( window && window == pressWindow
+         && window->position() != QPoint(0, 0) && window->devicePixelRatio() > 1.0 )
     {
         const qreal dpr = window->devicePixelRatio();
         const QPointF shift = QPointF(window->position()) * (dpr - 1.0) / dpr;

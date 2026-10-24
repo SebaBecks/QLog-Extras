@@ -3,9 +3,10 @@
 
 #include <QList>
 #include <QObject>
+#include <QPointer>
+#include <QWindow>
 
 class QApplication;
-class QWindow;
 
 // Android-only adjustments installed once at startup
 class AndroidSupport : public QObject
@@ -24,6 +25,7 @@ private:
     bool repost(QWindow *window, QEvent *original, QEvent *fixed);
 
     QList<QEvent *> reposted;
+    QPointer<QWindow> pressWindow;
 };
 
 #endif // QLOG_ANDROID_ANDROIDSUPPORT_H
