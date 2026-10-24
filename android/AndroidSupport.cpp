@@ -15,6 +15,10 @@ void AndroidSupport::beforeApplication()
 
     // Without it Qt ignores ImhNoPredictiveText and keyboards keep composing words
     qputenv("QT_ANDROID_ENABLE_WORKAROUND_TO_DISABLE_PREDICTIVE_TEXT", "1");
+
+    // Accessibility calls (e.g. Lenovo's stylus service) block Qt's main thread,
+    // so new popups never get a surface and combo box lists stay invisible
+    qputenv("QT_ANDROID_DISABLE_ACCESSIBILITY", "1");
 }
 
 void AndroidSupport::install(QApplication *app)
