@@ -208,6 +208,9 @@ HamlibRigDrv::~HamlibRigDrv()
         rig_cleanup(rig);
         rig = nullptr;
     }
+#ifdef Q_OS_ANDROID
+    bluetoothBridge.stop();
+#endif
     drvLock.unlock();
 }
 
@@ -233,6 +236,20 @@ bool HamlibRigDrv::open()
         const QString portString = rigProfile.hostname + ":" + QString::number(rigProfile.netport);
         strncpy(QLOG_HAMLIB_RIGPORT(rig)->pathname, portString.toLocal8Bit().constData(), HAMLIB_FILPATHLEN - 1);
     }
+#ifdef Q_OS_ANDROID
+    else if ( portType == RigProfile::SERIAL_ATTACHED
+              && BluetoothSerialBridge::isBluetoothPath(rigProfile.portPath) )
+    {
+        // Hamlib opens any rig as network when the path is host:port
+        const quint16 bridgePort = bluetoothBridge.start(rigProfile.portPath, &lastErrorText);
+
+        if ( !bridgePort )
+            return false;
+
+        const QString portString = QString("127.0.0.1:%1").arg(bridgePort);
+        strncpy(QLOG_HAMLIB_RIGPORT(rig)->pathname, portString.toLocal8Bit().constData(), HAMLIB_FILPATHLEN - 1);
+    }
+#endif
     else if ( portType == RigProfile::SERIAL_ATTACHED )
     {
         //handling Serial Port Radio

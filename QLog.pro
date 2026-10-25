@@ -779,8 +779,10 @@ android {
    QT -= webenginewidgets dbus
    INCLUDEPATH += $$PWD/android/webengine-stub
    HEADERS += android/webengine-stub/qwebenginestub.h \
-        android/AndroidSupport.h
+        android/AndroidSupport.h \
+        android/BluetoothSerialBridge.h
    SOURCES += android/AndroidSupport.cpp \
+        android/BluetoothSerialBridge.cpp \
         notification/android/DesktopNotificationAndroid.cpp
 
    INCLUDEPATH += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/

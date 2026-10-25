@@ -8,6 +8,9 @@
 #include "GenericRigDrv.h"
 #include "rig/RigCaps.h"
 #include "rig/drivers/HamlibCompat.h"
+#ifdef Q_OS_ANDROID
+#include "android/BluetoothSerialBridge.h"
+#endif
 
 class HamlibRigDrv : public GenericRigDrv
 {
@@ -117,6 +120,9 @@ private:
     double currTxFreq;
     QMutex drvLock;
     QHash<QString, QString>postponedErrors;
+#ifdef Q_OS_ANDROID
+    BluetoothSerialBridge bluetoothBridge;
+#endif
     QStringList modeList;
 };
 

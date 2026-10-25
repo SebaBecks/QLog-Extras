@@ -4,6 +4,10 @@
 #include <QDir>
 #include <QAbstractItemView>
 #include "EditLine.h"
+#ifdef Q_OS_ANDROID
+#include <QStringListModel>
+#include "android/BluetoothSerialBridge.h"
+#endif
 
 
 NewContactEditLine::NewContactEditLine(QWidget *parent) :
@@ -108,6 +112,9 @@ SerialPortEditLine::SerialPortEditLine(QWidget *parent) :
 #elif defined(Q_OS_MACOS)
     for (const QSerialPortInfo &port : ports)
         portNames << QString("/dev/%1").arg(port.portName());
+#elif defined(Q_OS_ANDROID)
+    // no serial ports on Android; paired Bluetooth rigs are filled in on focus
+    Q_UNUSED(ports)
 #else
     // In the case of Linux, it is good to use /dev/serial/by-id
     // because it does not change over time.
@@ -147,6 +154,16 @@ void SerialPortEditLine::focusInEvent(QFocusEvent *event)
 #if defined(Q_OS_WIN)
     completer()->setCompletionPrefix("COM");
     completer()->complete();
+#elif defined(Q_OS_ANDROID)
+    // the paired list needs the Bluetooth permission, asked for on first use
+    BluetoothSerialBridge::withPermission(this, [this]()
+    {
+        if ( auto *model = qobject_cast<QStringListModel *>(completer()->model()) )
+            model->setStringList(BluetoothSerialBridge::pairedDevices());
+
+        completer()->setCompletionPrefix(BluetoothSerialBridge::PREFIX);
+        completer()->complete();
+    });
 #else
     completer()->setCompletionPrefix("/dev/");
     completer()->complete();
