@@ -147,8 +147,12 @@ public slots:
     void addAdifRecoveryFile();
     void removeAdifRecoveryFile();
     void restoreDefaultQsoStatusColors();
+    void browseBackupFolder();
+    void openBackupFolder();
+    void openInternalBackupFolder();
 
 private:
+    void refreshBackupStatus();
     enum QsoStatusColorColumn
     {
         QsoStatusColumn,
@@ -171,6 +175,7 @@ private:
     void refreshRigAssignedCWKeyCombo();
     void refreshBandmapGuideCombo();
     void updateRigShareEnabled();
+    void updateRigCWKeyOutputEnabled();
     QList<QsoStatusColorRow> qsoStatusColorRows() const;
     void setupQsoStatusColorsTable();
     void loadQsoStatusColors();
