@@ -1,17 +1,18 @@
 #ifndef QLOG_ANDROID_QWEBENGINESTUB_H
 #define QLOG_ANDROID_QWEBENGINESTUB_H
 
-// Qt WebEngine is not available on Android. These classes keep the WebEngine
-// API used by the map and show the page in Android's own WebView (Qt WebView).
+// Qt WebEngine is not available on Android. These classes keep the map code
+// compiling; the view shows a placeholder and scripts are ignored.
 
+#include <QLabel>
 #include <QObject>
 #include <QPointer>
+#include <QTimer>
 #include <QUrl>
+#include <QVBoxLayout>
 #include <QWidget>
 
-class QQuickView;
 class QWebChannel;
-class QWebSocketServer;
 
 class QWebEngineProfile
 {
@@ -45,19 +46,17 @@ public:
     explicit QWebEnginePage(QObject *parent = nullptr) : QObject(parent) {}
 
     QWebEngineProfile *profile() { return &stubProfile; }
-    // WebView has no Qt transport; the channel is served on a local WebSocket
-    void setWebChannel(QWebChannel *channel);
-    quint16 webChannelPort() const;
-    void runJavaScript(const QString &script);
-    // WebView cannot open qrc pages; the page is copied to a file first
-    void load(const QUrl &url);
+    void setWebChannel(QWebChannel *) {}
+    void runJavaScript(const QString &) {}
 
-    QUrl pendingUrl;
+    // Report success so callers stop queueing scripts for a page that never loads
+    void load(const QUrl &)
+    {
+        QTimer::singleShot(0, this, [this]() { emit loadFinished(true); });
+    }
 
 signals:
     void loadFinished(bool ok);
-    void urlRequested(const QUrl &url);
-    void scriptRequested(const QString &script);
 
 protected:
     virtual bool acceptNavigationRequest(const QUrl &, NavigationType, bool) { return true; }
@@ -66,8 +65,6 @@ protected:
 
 private:
     QWebEngineProfile stubProfile;
-    QPointer<QWebChannel> channel;
-    QWebSocketServer *socketServer = nullptr;
 };
 
 class QWebEngineView : public QWidget
@@ -75,24 +72,34 @@ class QWebEngineView : public QWidget
     Q_OBJECT
 
 public:
-    explicit QWebEngineView(QWidget *parent = nullptr);
-    ~QWebEngineView() override;
+    explicit QWebEngineView(QWidget *parent = nullptr) : QWidget(parent)
+    {
+        QLabel *label = new QLabel(tr("Map is not available on Android"), this);
+        label->setAlignment(Qt::AlignCenter);
+        label->setWordWrap(true);
+        QVBoxLayout *layout = new QVBoxLayout(this);
+        layout->addWidget(label);
+    }
 
     QWebEnginePage *page() const { return currentPage.data(); }
     void setUrl(const QUrl &) {}
-    void setPage(QWebEnginePage *page);
+
+    void setPage(QWebEnginePage *page)
+    {
+        if ( currentPage )
+            disconnect(currentPage.data(), &QWebEnginePage::loadFinished,
+                       this, &QWebEngineView::loadFinished);
+        currentPage = page;
+        if ( page )
+            connect(page, &QWebEnginePage::loadFinished,
+                    this, &QWebEngineView::loadFinished);
+    }
 
 signals:
     void loadFinished(bool ok);
 
-private slots:
-    void loadUrl(const QUrl &url);
-    void runScript(const QString &script);
-    void pageLoaded(bool ok);
-
 private:
     QPointer<QWebEnginePage> currentPage;
-    QQuickView *quickView;
 };
 
 #endif // QLOG_ANDROID_QWEBENGINESTUB_H

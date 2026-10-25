@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/android">
-        <file>OnlineMapView.qml</file>
-    </qresource>
-</RCC>

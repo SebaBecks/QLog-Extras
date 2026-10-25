@@ -582,24 +582,12 @@ void MapPageController::connectWebChannel()
     QString js;
 
     js.append(stream.readAll());
-#ifdef Q_OS_ANDROID
-    // Android's WebView has no Qt transport; the channel runs over a local WebSocket
-    js += QStringLiteral(" var qlogSocket = new WebSocket('ws://127.0.0.1:%1'); "
-                         "qlogSocket.onopen = function() { "
-                         "  new QWebChannel(qlogSocket, function(channel) { "
-                         "    window.mapBridge = channel.objects.mapBridge; "
-                         "    if (window.connectQtMapBridge) "
-                         "      window.connectQtMapBridge(window.mapBridge); "
-                         "  }); "
-                         "};").arg(mainPage->webChannelPort());
-#else
     js += " var webChannel = new QWebChannel(qt.webChannelTransport, function(channel) "
           "{ "
           "  window.mapBridge = channel.objects.mapBridge; "
           "  if (window.connectQtMapBridge) "
           "    window.connectQtMapBridge(window.mapBridge); "
           "});";
-#endif
     mainPage->runJavaScript(js);
 }
 

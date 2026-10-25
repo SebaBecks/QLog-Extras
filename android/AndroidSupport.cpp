@@ -7,7 +7,6 @@
 #include <QStyle>
 #include <QTimer>
 #include <QWindow>
-#include <QtWebView>
 
 #include "AndroidSupport.h"
 
@@ -22,9 +21,6 @@ void AndroidSupport::beforeApplication()
     // Accessibility calls (e.g. Lenovo's stylus service) block Qt's main thread,
     // so new popups never get a surface and combo box lists stay invisible
     qputenv("QT_ANDROID_DISABLE_ACCESSIBILITY", "1");
-
-    // the online map runs in Android's WebView
-    QtWebView::initialize();
 }
 
 void AndroidSupport::install(QApplication *app)
