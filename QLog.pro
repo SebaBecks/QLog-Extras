@@ -775,15 +775,18 @@ win32: {
 }
 
 android {
-   # No Qt WebEngine and no D-Bus on Android; maps show a placeholder
+   # No Qt WebEngine and no D-Bus on Android; the map uses Android's WebView
    QT -= webenginewidgets dbus
+   QT += webview quick
    INCLUDEPATH += $$PWD/android/webengine-stub
    HEADERS += android/webengine-stub/qwebenginestub.h \
         android/AndroidSupport.h \
         android/BluetoothSerialBridge.h
-   SOURCES += android/AndroidSupport.cpp \
+   SOURCES += android/webengine-stub/qwebenginestub.cpp \
+        android/AndroidSupport.cpp \
         android/BluetoothSerialBridge.cpp \
         notification/android/DesktopNotificationAndroid.cpp
+   RESOURCES += android/android.qrc
 
    INCLUDEPATH += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/
    SOURCES += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c
