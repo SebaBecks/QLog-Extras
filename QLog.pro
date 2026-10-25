@@ -10,9 +10,12 @@ greaterThan(QT_MAJOR_VERSION, 5): QT += widgets
 
 TARGET = qlog
 TEMPLATE = app
-VERSION = 0.53.0
+VERSION = 0.54.0
 
 DEFINES += VERSION=\\\"$$VERSION\\\"
+
+# Enable ad hoc signing of macOS development bundles after linking. Disabled by default.
+#QLOG_MACOS_ADHOC_SIGN = 1
 
 # Define paths to HAMLIB. Leave empty if system libraries should be used
 #HAMLIBINCLUDEPATH =
@@ -44,6 +47,9 @@ DEFINES += VERSION=\\\"$$VERSION\\\"
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT
 
+# Test automatic backups at every startup, ignoring the interval and today's ADX.
+#DEFINES += QLOG_FORCE_AUTO_BACKUP
+
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -69,9 +75,11 @@ SOURCES += \
         awards/AwardUSCounty.cpp \
         awards/AwardPOTAActivator.cpp \
         awards/AwardPOTAHunter.cpp \
+        awards/AwardPGAHunter.cpp \
         awards/AwardSOTA.cpp \
         awards/AwardWAAC.cpp \
         awards/AwardWAIP.cpp \
+        awards/AwardWAJA.cpp \
         awards/AwardWANA.cpp \
         awards/AwardWorkedAllRAC.cpp \
         awards/SecondarySubdivisionAward.cpp \
@@ -90,17 +98,20 @@ SOURCES += \
         core/FldigiTCPServer.cpp \
         core/FldigiUDPReceiver.cpp \
         core/LOVDownloader.cpp \
+        core/LOVDatabase.cpp \
         core/LogDatabase.cpp \
+        core/DatabaseBackup.cpp \
         core/LogLocale.cpp \
         core/LogParam.cpp \
+        core/MacroExpander.cpp \
         core/MembershipQE.cpp \
         core/Migration.cpp \
         core/MqttClient.cpp \
-        core/NetworkNotification.cpp \
         core/PasswordCipher.cpp \
         core/PlatformParameterManager.cpp \
         core/PotaQE.cpp \
         core/PropConditions.cpp \
+        core/QSLLabelBuilder.cpp \
         core/QSLPrintLabelRenderer.cpp \
         core/QSLStorage.cpp \
         core/QSOFilterManager.cpp \
@@ -110,7 +121,10 @@ SOURCES += \
         core/EmergencyFrequency.cpp \
         core/IBPBeacon.cpp \
         core/main.cpp \
-        core/zonedetect.c \
+        3rdparty/bertoldvdb/zonedetect/library/zonedetect.c \
+        notification/DesktopNotification.cpp \
+        notification/NetworkNotification.cpp \
+        notification/AlertNotification.cpp \
         cwkey/CWKeyer.cpp \
         cwkey/drivers/CWCatKey.cpp \
         cwkey/drivers/CWDaemonKey.cpp \
@@ -119,7 +133,9 @@ SOURCES += \
         cwkey/drivers/CWKey.cpp \
         cwkey/drivers/CWWinKey.cpp \
         data/ActivityProfile.cpp \
+        data/ActivityRuntimeProvider.cpp \
         data/AntProfile.cpp \
+        data/AntennaRuntimeProvider.cpp \
         data/BandmapGuide.cpp \
         data/BandPlan.cpp \
         data/Accents.cpp \
@@ -127,6 +143,8 @@ SOURCES += \
         data/CWShortcutProfile.cpp \
         data/Callsign.cpp \
         data/Data.cpp \
+        data/DxccConfirmation.cpp \
+        data/DxccLogStatusCondition.cpp \
         data/DxServerString.cpp \
         data/Gridsquare.cpp \
         data/HostsPortString.cpp \
@@ -136,6 +154,7 @@ SOURCES += \
         data/RotUsrButtonsProfile.cpp \
         data/SerialPort.cpp \
         data/StationProfile.cpp \
+        data/StationRuntimeProvider.cpp \
         data/UpdatableSQLRecord.cpp \
         digi/AudioInput.cpp \
         logformat/AdiFormat.cpp \
@@ -145,6 +164,9 @@ SOURCES += \
         logformat/JsonFormat.cpp \
         logformat/LogFormat.cpp \
         logformat/PotaAdiFormat.cpp \
+        mcpbridge/RuntimeContext.cpp \
+        mcpbridge/RuntimeProvider.cpp \
+        mcpbridge/RuntimeServer.cpp \
         models/AlertTableModel.cpp \
         models/AwardsTableModel.cpp \
         models/DxccTableModel.cpp \
@@ -154,6 +176,7 @@ SOURCES += \
         models/SearchFilterProxyModel.cpp \
         models/ShortcutEditorModel.cpp \
         models/SqlListModel.cpp \
+        models/WsjtxActivity.cpp \
         models/WsjtxTableModel.cpp \
         rig/Rig.cpp \
         rig/OmniRigClient.cpp \
@@ -161,6 +184,7 @@ SOURCES += \
         rig/OmniRigMeters.cpp \
         rig/QsoRecorder.cpp \
         rig/RigctldClient.cpp \
+        rig/RigRuntimeProvider.cpp \
         rig/RigCaps.cpp \
         rig/RigctldManager.cpp \
         rig/drivers/FlrigRigDrv.cpp \
@@ -169,6 +193,7 @@ SOURCES += \
         rig/drivers/TCIRigDrv.cpp \
         rotator/RotCaps.cpp \
         rotator/Rotator.cpp \
+        rotator/RotatorRuntimeProvider.cpp \
         rotator/drivers/GenericRotDrv.cpp \
         rotator/drivers/HamlibRotDrv.cpp \
         rotator/drivers/PSTRotDrv.cpp \
@@ -195,6 +220,8 @@ SOURCES += \
         ui/ActivityEditor.cpp \
         ui/AdifRecoveryManager.cpp \
         ui/AlertRuleDetail.cpp \
+        ui/component/DxccLogStatusWidget.cpp \
+        ui/AlertRuleLogStatusDialog.cpp \
         ui/AlertSettingDialog.cpp \
         ui/AlertWidget.cpp \
         ui/AwardsDialog.cpp \
@@ -209,6 +236,7 @@ SOURCES += \
         ui/DownloadQSLDialog.cpp \
         ui/DxFilterDialog.cpp \
         ui/DxWidget.cpp \
+        ui/SpotCommentDialog.cpp \
         ui/DxccTableWidget.cpp \
         ui/EditActivitiesDialog.cpp \
         ui/CabrilloExportDialog.cpp \
@@ -256,6 +284,8 @@ SOURCES += \
         ui/WsjtxWidget.cpp \
         ui/component/BaseDoubleSpinBox.cpp \
         ui/component/EditLine.cpp \
+        ui/component/DxCommandEdit.cpp \
+        ui/component/SuggestionEdit.cpp \
         ui/component/FreqQSpinBox.cpp \
         ui/component/ModeSubmodeDelegate.cpp \
         ui/component/MultilineTextDelegate.cpp \
@@ -281,9 +311,11 @@ HEADERS += \
         awards/AwardUSCounty.h \
         awards/AwardPOTAActivator.h \
         awards/AwardPOTAHunter.h \
+        awards/AwardPGAHunter.h \
         awards/AwardSOTA.h \
         awards/AwardWAAC.h \
         awards/AwardWAIP.h \
+        awards/AwardWAJA.h \
         awards/AwardWANA.h \
         awards/AwardWorkedAllRAC.h \
         awards/SecondarySubdivisionAward.h \
@@ -302,28 +334,35 @@ HEADERS += \
         core/FldigiTCPServer.h \
         core/FldigiUDPReceiver.h \
         core/LOVDownloader.h \
+        core/LOVDatabase.h \
         core/LogDatabase.h \
+        core/DatabaseBackup.h \
         core/LogLocale.h \
         core/LogParam.h \
+        core/MacroExpander.h \
         core/MembershipQE.h \
         core/Migration.h \
         core/MqttClient.h \
-        core/NetworkNotification.h \
         core/PasswordCipher.h \
         core/PlatformParameterManager.h \
         core/PotaQE.h \
         core/PropConditions.h \
+        core/QSLLabelBuilder.h \
         core/QSLPrintLabelRenderer.h \
         core/QSLStorage.h \
         core/QSOFilterManager.h \
         core/QSOFilterDateRange.h \
         core/QuadKeyCache.h \
         core/WsjtxUDPReceiver.h \
-        core/csv.hpp \
+        3rdparty/vincentlaucsb/csv-parser/csv.hpp \
         core/debug.h \
         core/EmergencyFrequency.h \
         core/IBPBeacon.h \
-        core/zonedetect.h \
+        3rdparty/bertoldvdb/zonedetect/library/zonedetect.h \
+        notification/DesktopNotification.h \
+        notification/NetworkNotification.h \
+        notification/DesktopNotificationCategory.h \
+        notification/AlertNotification.h \
         cwkey/CWKeyer.h \
         cwkey/drivers/CWCatKey.h \
         cwkey/drivers/CWDaemonKey.h \
@@ -332,7 +371,9 @@ HEADERS += \
         cwkey/drivers/CWKey.h \
         cwkey/drivers/CWWinKey.h \
         data/ActivityProfile.h \
+        data/ActivityRuntimeProvider.h \
         data/AntProfile.h \
+        data/AntennaRuntimeProvider.h \
         data/Band.h \
         data/BandmapGuide.h \
         data/BandPlan.h \
@@ -343,6 +384,8 @@ HEADERS += \
         data/DxServerString.h \
         data/DxSpot.h \
         data/Dxcc.h \
+        data/DxccConfirmation.h \
+        data/DxccLogStatusCondition.h \
         data/Gridsquare.h \
         data/HeardMeSpot.h \
         data/HostsPortString.h \
@@ -358,6 +401,7 @@ HEADERS += \
         data/SerialPort.h \
         data/SpotAlert.h \
         data/StationProfile.h \
+        data/StationRuntimeProvider.h \
         data/ToAllSpot.h \
         data/UpdatableSQLRecord.h \
         digi/AudioInput.h \
@@ -377,6 +421,9 @@ HEADERS += \
         logformat/JsonFormat.h \
         logformat/LogFormat.h \
         logformat/PotaAdiFormat.h \
+        mcpbridge/RuntimeContext.h \
+        mcpbridge/RuntimeProvider.h \
+        mcpbridge/RuntimeServer.h \
         models/AlertTableModel.h \
         models/AwardsTableModel.h \
         models/DxccTableModel.h \
@@ -386,6 +433,7 @@ HEADERS += \
         models/SearchFilterProxyModel.h \
         models/ShortcutEditorModel.h \
         models/SqlListModel.h \
+        models/WsjtxActivity.h \
         models/WsjtxTableModel.h \
         rig/Rig.h \
         rig/OmniRigClient.h \
@@ -393,6 +441,7 @@ HEADERS += \
         rig/OmniRigMeters.h \
         rig/QsoRecorder.h \
         rig/RigctldClient.h \
+        rig/RigRuntimeProvider.h \
         rig/RigCaps.h \
         rig/RigctldManager.h \
         rig/drivers/FlrigRigDrv.h \
@@ -403,6 +452,7 @@ HEADERS += \
         rig/macros.h \
         rotator/RotCaps.h \
         rotator/Rotator.h \
+        rotator/RotatorRuntimeProvider.h \
         rotator/drivers/GenericRotDrv.h \
         rotator/drivers/HamlibRotDrv.h \
         rotator/drivers/PSTRotDrv.h \
@@ -430,6 +480,8 @@ HEADERS += \
         ui/ActivityEditor.h \
         ui/AdifRecoveryManager.h \
         ui/AlertRuleDetail.h \
+        ui/component/DxccLogStatusWidget.h \
+        ui/AlertRuleLogStatusDialog.h \
         ui/AlertSettingDialog.h \
         ui/AlertWidget.h \
         ui/AwardsDialog.h \
@@ -444,6 +496,7 @@ HEADERS += \
         ui/DownloadQSLDialog.h \
         ui/DxFilterDialog.h \
         ui/DxWidget.h \
+        ui/SpotCommentDialog.h \
         ui/DxccTableWidget.h \
         ui/EditActivitiesDialog.h \
         ui/CabrilloExportDialog.h \
@@ -496,6 +549,8 @@ HEADERS += \
         ui/component/BaseDoubleSpinBox.h \
         ui/component/ButtonStyle.h \
         ui/component/EditLine.h \
+        ui/component/DxCommandEdit.h \
+        ui/component/SuggestionEdit.h \
         ui/component/FreqQSpinBox.h \
         ui/component/ModeSubmodeDelegate.h \
         ui/component/MultilineTextDelegate.h \
@@ -509,12 +564,15 @@ HEADERS += \
         ui/component/SwitchButton.h
 
 FORMS += \
+        awards/PGAHunterTable.ui \
+        ui/AlertRuleLogStatusDialog.ui \
         ui/QSOFilterRule.ui \
         ui/component/QSOFilterDateRangeEdit.ui \
         ui/component/QSOFilterDateBoundary.ui \
         ui/component/QSOFilterDateRangeDialog.ui \
         ui/ActivityEditor.ui \
         ui/AlertRuleDetail.ui \
+        ui/component/DxccLogStatusWidget.ui \
         ui/AlertSettingDialog.ui \
         ui/AlertWidget.ui \
         ui/AwardsDialog.ui \
@@ -530,6 +588,7 @@ FORMS += \
         ui/DownloadQSLDialog.ui \
         ui/DxFilterDialog.ui \
         ui/DxWidget.ui \
+        ui/SpotCommentDialog.ui \
         ui/EditActivitiesDialog.ui \
         ui/CabrilloExportDialog.ui \
         ui/CabrilloTemplateDialog.ui \
@@ -666,6 +725,8 @@ isEmpty(HAMLIBVERSION_PATCH){
 }
 
 unix:!macx {
+   SOURCES += notification/linux/DesktopNotificationLinux.cpp
+
    isEmpty(PREFIX) {
      PREFIX = /usr/local
    }
@@ -694,6 +755,14 @@ unix:!macx {
 }
 
 macx: {
+   QMAKE_TARGET_BUNDLE_PREFIX = io.github.foldynl
+   OBJECTIVE_SOURCES += notification/macos/DesktopNotificationMac.mm
+
+   equals(QLOG_MACOS_ADHOC_SIGN, 1):app_bundle {
+      QMAKE_POST_LINK += $$escape_expand(\\n\\t) \
+         codesign --force --sign - $$shell_quote($$absolute_path($$DESTDIR, $$OUT_PWD)/$${TARGET}.app)
+   }
+
    # This allows the app to be shipped in a non-bundeled version
    !isEmpty(PREFIX) {
       target.path = $$PREFIX
@@ -710,7 +779,7 @@ macx: {
    }
 
    INCLUDEPATH += /usr/local/include /opt/homebrew/include /opt/local/include
-   LIBS += -L/usr/local/lib -L/opt/homebrew/lib -lhamlib -lz -L/opt/local/lib -lssl -lcrypto
+   LIBS += -L/usr/local/lib -L/opt/homebrew/lib -lhamlib -lz -L/opt/local/lib -lssl -lcrypto -framework UserNotifications
    equals(QT_MAJOR_VERSION, 6): LIBS += -lqt6keychain
    equals(QT_MAJOR_VERSION, 5): LIBS += -lqt5keychain
    # Adds the microphone permission text (REC, Digi Panel)
@@ -725,6 +794,7 @@ win32: {
 
    SOURCES += \
         rig/drivers/OmniRigRigFile.cpp \
+        notification/windows/DesktopNotificationWindows.cpp \
         rig/drivers/OmnirigRigDrv.cpp \
         rig/drivers/Omnirigv2RigDrv.cpp \
         $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c
@@ -741,11 +811,11 @@ win32: {
    QMAKE_TARGET_COMPANY = OK1MLG
    QMAKE_TARGET_DESCRIPTION = Hamradio logging
 
-   LIBS += -lws2_32 -llibhamlib-4 -lzlib -llibssl -llibcrypto
+   LIBS += -lws2_32 -lruntimeobject -lole32 -lshell32 -lpropsys -llibhamlib-4 -lzlib -llibssl -llibcrypto
    equals(QT_MAJOR_VERSION, 6): LIBS += -lqt6keychain
    equals(QT_MAJOR_VERSION, 5): LIBS += -lqt5keychain
 
-   DEFINES += WIN32_LEAN_AND_MEAN
+   DEFINES += WIN32_LEAN_AND_MEAN NOMINMAX
    DEFINES += ZD_EXPORT=
 }
 
@@ -755,5 +825,9 @@ DEFINES += HAMLIBVERSION_PATCH=$$HAMLIBVERSION_PATCH
 
 DISTFILES += \
     Changelog \
+    3rdparty/bertoldvdb/zonedetect/LICENSE \
+    3rdparty/vincentlaucsb/csv-parser/LICENSE \
+    3rdparty/versions.sh \
+    devtools/3rdparty/update.sh \
     i18n/dbstrings.tri \
     res/data/sat_modes
