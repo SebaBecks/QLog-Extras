@@ -1,12 +1,15 @@
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJniEnvironment>
+#include <QJniObject>
 #include <QJsonDocument>
-#include <QStandardPaths>
 #include <QJsonObject>
 #include <QQuickItem>
 #include <QQuickView>
-#include <QUrlQuery>
+#include <QStandardPaths>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWebChannel>
 #include <QWebChannelAbstractTransport>
@@ -44,6 +47,35 @@ public:
 private:
     QWebSocket *socket;
 };
+
+// An accessibility service walking the page (Lenovo's stylus service) stalls
+// Android's WebView: pages stay at 10 %. The map has nothing to read anyway.
+void hideWebViewsFromAccessibility()
+{
+    QNativeInterface::QAndroidApplication::runOnAndroidMainThread([]()
+    {
+        const jint NO_HIDE_DESCENDANTS = 4;
+        QJniEnvironment env;
+        jclass group = env.findClass("android/view/ViewGroup");
+        jclass webView = env.findClass("android/webkit/WebView");
+        QJniObject activity = QNativeInterface::QAndroidApplication::context();
+        QList<QJniObject> views { activity.callObjectMethod("getWindow", "()Landroid/view/Window;")
+                                          .callObjectMethod("getDecorView", "()Landroid/view/View;") };
+
+        while ( !views.isEmpty() )
+        {
+            QJniObject view = views.takeLast();
+
+            if ( env->IsInstanceOf(view.object(), webView) )
+                view.callMethod<void>("setImportantForAccessibility", "(I)V", NO_HIDE_DESCENDANTS);
+            else if ( env->IsInstanceOf(view.object(), group) )
+                for ( jint i = 0; i < view.callMethod<jint>("getChildCount"); ++i )
+                    views << view.callObjectMethod("getChildAt", "(I)Landroid/view/View;", i);
+        }
+
+        env.checkAndClearExceptions();
+    });
+}
 }
 
 void QWebEnginePage::setWebChannel(QWebChannel *newChannel)
@@ -162,8 +194,12 @@ void QWebEngineView::loadUrl(const QUrl &url)
 
     qCDebug(function_parameters) << url;
 
+    // the native WebView appears a moment after the QML item
+    hideWebViewsFromAccessibility();
+    QTimer::singleShot(500, this, &hideWebViewsFromAccessibility);
+
     if ( QQuickItem *webView = quickView->rootObject() )
-        webView->setProperty("url", url);
+        webView->setProperty("target", url);
 }
 
 void QWebEngineView::runScript(const QString &script)
