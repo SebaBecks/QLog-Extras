@@ -116,6 +116,9 @@ private:
     bool blockClublogSignals;
     bool eventFilter(QObject *obj, QEvent *event);
     void filterTable();
+#ifdef Q_OS_ANDROID
+    void fitColumnsToContents();
+#endif
     void editUserFilterParameters();
     void saveBandFilter();
     void restoreBandFilter();
@@ -178,6 +181,16 @@ public:
             return 0;  // show tooltip immediately
         return QProxyStyle::styleHint(hint, option, widget, returnData);
     }
+#ifdef Q_OS_ANDROID
+    // a finger cannot hit the few pixels around a column border
+    int pixelMetric(PixelMetric metric, const QStyleOption *option = nullptr,
+                    const QWidget *widget = nullptr) const override
+    {
+        if ( metric == QStyle::PM_HeaderGripMargin )
+            return 16;
+        return QProxyStyle::pixelMetric(metric, option, widget);
+    }
+#endif
 };
 
 #endif // QLOG_UI_LOGBOOKWIDGET_H

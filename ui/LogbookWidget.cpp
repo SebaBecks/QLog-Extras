@@ -292,6 +292,11 @@ LogbookWidget::LogbookWidget(QWidget *parent) :
     ui->contactTable->setSortingEnabled(true);
     ui->contactTable->horizontalHeader()->setSectionsMovable(true);
     ui->contactTable->setStyle(new ProxyStyle(ui->contactTable->style()));
+#ifdef Q_OS_ANDROID
+    QStyle *headerStyle = new ProxyStyle();
+    headerStyle->setParent(ui->contactTable->horizontalHeader());
+    ui->contactTable->horizontalHeader()->setStyle(headerStyle);
+#endif
     ui->contactTable->installEventFilter(this);
     setDefaultSort();
 
@@ -1211,6 +1216,10 @@ void LogbookWidget::setContactTableColumnVisible(int columnIndex, bool visible)
 
     if ( visible && ui->contactTable->columnWidth(columnIndex) == 0 )
         ui->contactTable->setColumnWidth(columnIndex, ui->contactTable->horizontalHeader()->defaultSectionSize());
+#ifdef Q_OS_ANDROID
+    if ( visible )
+        fitColumnsToContents();
+#endif
 }
 
 void LogbookWidget::showTableHeaderContextMenu(const QPoint& point)
@@ -1535,7 +1544,29 @@ void LogbookWidget::filterTable()
     qCDebug(runtime) << model->query().lastQuery();
 
     reselectModel();
+#ifdef Q_OS_ANDROID
+    fitColumnsToContents();
+#endif
 }
+
+#ifdef Q_OS_ANDROID
+// Column borders are too thin to drag with a finger; size columns to their text
+void LogbookWidget::fitColumnsToContents()
+{
+    FCT_IDENTIFICATION;
+
+    // free text would stretch the table over several screens
+    static const QSet<int> freeText = {
+        LogbookModel::COLUMN_COMMENT, LogbookModel::COLUMN_COMMENT_INTL,
+        LogbookModel::COLUMN_NOTES, LogbookModel::COLUMN_NOTES_INTL,
+        LogbookModel::COLUMN_QSLMSG, LogbookModel::COLUMN_QSLMSG_INTL,
+        LogbookModel::COLUMN_ADDRESS, LogbookModel::COLUMN_ADDRESS_INTL };
+
+    for ( int i = 0; i < model->columnCount(); ++i )
+        if ( !ui->contactTable->isColumnHidden(i) && !freeText.contains(i) )
+            ui->contactTable->resizeColumnToContents(i);
+}
+#endif
 
 void LogbookWidget::editUserFilterParameters()
 {
