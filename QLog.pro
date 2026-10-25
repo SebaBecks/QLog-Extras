@@ -818,6 +818,8 @@ android {
    ANDROID_MIN_SDK_VERSION = 28
    ANDROID_TARGET_SDK_VERSION = 34
    ANDROID_VERSION_NAME = $$VERSION
+   # must grow with every published APK, or Android refuses the update
+   ANDROID_VERSION_CODE = 54001
 }
 
 DEFINES += HAMLIBVERSION_MAJOR=$$HAMLIBVERSION_MAJOR
