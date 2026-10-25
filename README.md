@@ -20,7 +20,7 @@ This is an **unofficial** build of [QLog](https://github.com/foldynl/QLog) with 
 - **[Panadapter](docs/panadapter.md)** – a spectrum and waterfall with DX cluster spots on the signals; a click tunes the rig. The picture comes from an RTL-SDR on the rig's IF output or RX OUT, or from the rig's own scope through Hamlib (IC-705, IC-7300, IC-9700, IC-7610 and similar Icoms).
 - **[OmniRig](docs/omnirig.md)** – the Rig Panel and the Panadapter work through OmniRig too, and CW now selects the rig's normal CW instead of the reverse.
 
-The database is the same as QLog 0.53.0 (no migration), so you can switch back to the official QLog at any time.
+Based on QLog 0.54.0. The database is the same as in the official QLog 0.54.0 (the extras add no migration), so you can switch back to the official QLog 0.54.0 or newer at any time. Like the official 0.54.0, the first start upgrades a log from QLog 0.53 or older, which those versions can then no longer open, so keep a backup.
 
 Tested on Windows 11 with a Yaesu FTdx101MP and an Icom IC-705.
 
