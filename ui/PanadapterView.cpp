@@ -644,9 +644,12 @@ void PanadapterView::mouseReleaseEvent(QMouseEvent *event)
     {
         if ( !dragging )
         {
-            if ( pressSpot >= 0 )
-                emit spotClicked(pressSpot);
-            else if ( high > low )
+            // spots may have been redrawn since the press; take the one there now
+            const int spot = ( pressSpot >= 0 ) ? spotAt(pressPoint) : -1;
+
+            if ( spot >= 0 )
+                emit spotClicked(spot);
+            else if ( pressSpot < 0 && high > low )
                 emit clicked(hzAt(pressPoint.x()));
         }
         pressed = false;

@@ -9,6 +9,8 @@
 #include <QVector>
 #include <QStringList>
 
+class QTimer;
+
 #include "digi/AudioFormat.h"
 #include <QtGlobal>
 
@@ -65,6 +67,10 @@ private:
     QByteArray remainder; // partial frame left over from the last read
     QElapsedTimer clock;
     qint64 framesSeen;
+    /* Windows does not report an unplugged card, it just stops sending;
+       silence for SILENCE_LIMIT_MS is taken as the card being gone. */
+    QElapsedTimer sinceData;
+    QTimer *watchdog;
 };
 
 #endif // QLOG_DIGI_AUDIOINPUT_H

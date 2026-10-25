@@ -85,6 +85,8 @@ private:
     std::thread reader;
     std::atomic<bool> running {false};
     std::atomic<bool> stopping {false};
+    // set by the reader thread as it leaves readLoop()
+    std::atomic<bool> finished {true};
     /* Byte -> float lookup. */
     float level[256];
 };

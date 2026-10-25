@@ -362,8 +362,12 @@ void QsoRecorder::setTransmitting(bool on)
 
     if ( on )
     {
+        // already open: a repeated report must not move the start
+        if ( gateTo < 0 )
+            return;
+
         // PTT pressed again within the mix delay: extend the previous gate
-        if ( !( gateTo >= 0 && rigSamplesMixed < gateTo ) )
+        if ( !( rigSamplesMixed < gateTo ) )
             gateFrom = qMax<qint64>(0, rigSamplesIn - lead);
 
         gateTo = -1;
@@ -596,6 +600,16 @@ QString QsoRecorder::stop(const QString &label)
     if ( !isRecording() )
         return QString();
 
+    // the audio held back for the voice mix belongs in the file too
+    const int delay = mixDelay;
+
+    mixDelay = 0;
+    mix();
+    mixDelay = delay;
+
+    if ( !file )
+        return QString();
+
     if ( !pending.isEmpty() )
     {
         if ( file->write(pending) == pending.size() )
@@ -644,6 +658,8 @@ void QsoRecorder::abandon(const QString &reason)
 
     if ( file )
     {
+        // sizes as far as written, so the partial file still plays
+        writeHeader();
         file->close();
         delete file;
         file = nullptr;

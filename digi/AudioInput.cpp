@@ -1,5 +1,7 @@
 #include <QIODevice>
 #include <QElapsedTimer>
+#include <QTimer>
+#include <type_traits>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QAudioDevice>
@@ -14,6 +16,9 @@
 #include "core/debug.h"
 
 MODULE_IDENTIFICATION("qlog.digi.audioinput");
+
+// no samples for this long: the card is gone
+#define SILENCE_LIMIT_MS 3000
 
 // Qt 5 describes a sample by size and signedness, Qt 6 by one enum
 DigiAudio::Sample AudioInput::sampleKind() const
@@ -53,9 +58,22 @@ AudioInput::AudioInput(QObject *parent) :
     QObject(parent),
     source(nullptr),
     io(nullptr),
-    framesSeen(0)
+    framesSeen(0),
+    watchdog(new QTimer(this))
 {
     FCT_IDENTIFICATION;
+
+    watchdog->setInterval(1000);
+    connect(watchdog, &QTimer::timeout, this, [this]()
+    {
+        if ( !source || sinceData.elapsed() < SILENCE_LIMIT_MS )
+            return;
+
+        qCWarning(runtime) << "no audio from" << currentName << "for" << sinceData.elapsed() << "ms";
+        const QString name = currentName;
+        stop();
+        emit failed(tr("No sound from %1").arg(name));
+    });
 }
 
 AudioInput::~AudioInput()
@@ -220,8 +238,23 @@ bool AudioInput::start(const QString &description)
     remainder.clear();
     framesSeen = 0;
     clock.start();
+    sinceData.start();
+    watchdog->start();
 
     connect(io, &QIODevice::readyRead, this, &AudioInput::readAvailable);
+
+    // a card unplugged or switched off stops the source with an error and nothing else
+    connect(source, &std::remove_pointer<decltype(source)>::type::stateChanged,
+            this, [this](QAudio::State state)
+    {
+        if ( state != QAudio::StoppedState || !source || source->error() == QAudio::NoError )
+            return;
+
+        qCWarning(runtime) << "audio input lost:" << source->error();
+        const QString name = currentName;
+        stop();
+        emit failed(tr("Lost %1").arg(name));
+    });
 
     qCDebug(runtime) << "audio input open:" << currentName
                      << format.sampleRate() << "Hz"
@@ -236,6 +269,10 @@ void AudioInput::stop()
     if ( !source )
         return;
 
+    watchdog->stop();
+
+    // a stop asked for here is not a failure to report
+    source->disconnect(this);
     source->stop();
     source->deleteLater();
     source = nullptr;
@@ -258,6 +295,7 @@ void AudioInput::readAvailable()
     if ( mono.isEmpty() )
         return;
 
+    sinceData.restart();
     emit samplesReady(mono);
 
     framesSeen += mono.size();

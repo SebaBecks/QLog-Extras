@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cmath>
 
 #include "RtlSdrDevice.h"
@@ -349,6 +350,7 @@ bool RtlSdrDevice::start()
 
     resetBuffer(dev);
     stopping = false;
+    finished = false;
     running = true;
     reader = std::thread(&RtlSdrDevice::readLoop, this);
     return true;
@@ -362,7 +364,15 @@ void RtlSdrDevice::stop()
         return;
 
     stopping = true;
-    cancelAsync(dev);
+
+    /* A cancel sent before read_async has started is ignored, and the
+       reader would then block for good; repeat it until the thread ends. */
+    while ( !finished )
+    {
+        cancelAsync(dev);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
     reader.join();
     running = false;
 }
@@ -372,9 +382,11 @@ void RtlSdrDevice::readLoop()
     FCT_IDENTIFICATION;
 
     /* Blocks until cancelled or unplugged. */
-    const int result = readAsync(dev, &RtlSdrDevice::received, this, BUFFER_COUNT, BUFFER_BYTES);
+    const int result = stopping ? 0 : readAsync(dev, &RtlSdrDevice::received, this,
+                                                BUFFER_COUNT, BUFFER_BYTES);
 
     running = false;
+    finished = true;
     if ( !stopping )
         emit failed(tr("The RTL-SDR stopped sending (%1)").arg(result));
 }

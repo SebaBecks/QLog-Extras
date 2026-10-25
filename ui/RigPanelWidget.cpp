@@ -392,6 +392,7 @@ RigPanelWidget::RigPanelWidget(QWidget *parent) :
     ui->setupUi(this);
     applyFonts();
     buildStateButtons();
+    placeSettings();
 
     cycleTimer = new QTimer(this);
     cycleTimer->setSingleShot(true);
@@ -1540,6 +1541,54 @@ void RigPanelWidget::buildStateButtons()
         ui->buttonGrid->addWidget(button, 1, column++);
 
     recButton->setDetail(tr("off"));
+}
+
+bool RigPanelWidget::event(QEvent *event)
+{
+    const bool handled = QWidget::event(event);
+
+    // LayoutRequest also follows text changes, e.g. in sourceLabel
+    if ( event->type() == QEvent::Resize || event->type() == QEvent::LayoutRequest )
+        placeSettings();
+
+    return handled;
+}
+
+void RigPanelWidget::placeSettings()
+{
+    FCT_IDENTIFICATION;
+
+    const QMargins margins = ui->mainLayout->contentsMargins();
+    const int spacing = qMax(ui->bottomLayout->spacing(), 6);
+    const int buttonsAndInfo = ui->buttonGrid->sizeHint().width()
+                               + ui->infoLayout->sizeHint().width() + 2 * spacing;
+    const int oneRow = margins.left() + margins.right() + buttonsAndInfo
+                       + ui->settingsBox->sizeHint().width() + 2 * spacing;
+
+    /* An explicit minimum lets the dock shrink below the one-row width;
+       the layout alone would hold it there. */
+    const int rows = qMax(buttonsAndInfo, ui->settingsBox->minimumSizeHint().width());
+    const int upper = qMax(ui->vfoLayout->minimumSize().width(),
+                           ui->meterLayout->minimumSize().width());
+    setMinimumWidth(margins.left() + margins.right() + qMax(rows, upper));
+
+    const bool wrap = width() < oneRow;
+
+    if ( wrap == settingsWrapped )
+        return;
+
+    settingsWrapped = wrap;
+
+    if ( wrap )
+    {
+        ui->bottomLayout->removeWidget(ui->settingsBox);
+        ui->wrapLayout->insertWidget(0, ui->settingsBox);
+    }
+    else
+    {
+        ui->wrapLayout->removeWidget(ui->settingsBox);
+        ui->bottomLayout->addWidget(ui->settingsBox);
+    }
 }
 
 void RigPanelWidget::setRigLevel(const QString &name, int value)
