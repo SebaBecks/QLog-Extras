@@ -780,7 +780,8 @@ android {
    INCLUDEPATH += $$PWD/android/webengine-stub
    HEADERS += android/webengine-stub/qwebenginestub.h \
         android/AndroidSupport.h
-   SOURCES += android/AndroidSupport.cpp
+   SOURCES += android/AndroidSupport.cpp \
+        notification/android/DesktopNotificationAndroid.cpp
 
    INCLUDEPATH += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/
    SOURCES += $$[QT_INSTALL_PREFIX]/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c
