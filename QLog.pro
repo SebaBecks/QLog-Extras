@@ -777,6 +777,8 @@ win32: {
 android {
    # No Qt WebEngine and no D-Bus on Android; maps show a placeholder
    QT -= webenginewidgets dbus
+   # QtAndroidPrivate::NewIntentListener for taps on notifications
+   QT += core-private
    INCLUDEPATH += $$PWD/android/webengine-stub
    HEADERS += android/webengine-stub/qwebenginestub.h \
         android/AndroidSupport.h \
