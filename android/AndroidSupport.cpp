@@ -2,7 +2,9 @@
 #include <QDialog>
 #include <QEvent>
 #include <QMouseEvent>
+#include <QProxyStyle>
 #include <QScreen>
+#include <QStyle>
 #include <QTimer>
 #include <QWindow>
 
@@ -24,6 +26,30 @@ void AndroidSupport::beforeApplication()
 void AndroidSupport::install(QApplication *app)
 {
     app->installEventFilter(new AndroidSupport(app));
+}
+
+namespace
+{
+// The borders between docks are a few pixels wide; a finger cannot drag them
+class TouchStyle : public QProxyStyle
+{
+public:
+    using QProxyStyle::QProxyStyle;
+
+    int pixelMetric(PixelMetric metric, const QStyleOption *option = nullptr,
+                    const QWidget *widget = nullptr) const override
+    {
+        if ( metric == PM_DockWidgetSeparatorExtent || metric == PM_SplitterWidth )
+            return 14;
+        return QProxyStyle::pixelMetric(metric, option, widget);
+    }
+};
+}
+
+void AndroidSupport::applyTouchStyle(QApplication *app)
+{
+    // created by name: setStyle() deletes the current style, so it cannot be the base
+    app->setStyle(new TouchStyle(app->style()->name()));
 }
 
 bool AndroidSupport::repost(QWindow *window, QEvent *original, QEvent *fixed)

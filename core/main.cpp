@@ -575,6 +575,9 @@ int main(int argc, char* argv[])
     {
         app.setStyle(QStyleFactory::create("Fusion"));
     }
+#ifdef Q_OS_ANDROID
+    AndroidSupport::applyTouchStyle(&app);
+#endif
 
     qInstallMessageHandler(debugMessageOutput);
     qRegisterMetaType<VFOID>();

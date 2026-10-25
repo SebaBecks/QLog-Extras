@@ -15,6 +15,8 @@ public:
     // Must run before QApplication is created
     static void beforeApplication();
     static void install(QApplication *app);
+    // After the application style is set: borders wide enough for a finger
+    static void applyTouchStyle(QApplication *app);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
