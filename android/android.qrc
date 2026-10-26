@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/android">
         <file>OnlineMapView.qml</file>
+        <file>certs/globalsign-root-r6.pem</file>
     </qresource>
 </RCC>

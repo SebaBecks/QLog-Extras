@@ -24,6 +24,8 @@ protected:
 private:
     explicit AndroidSupport(QObject *parent) : QObject(parent) {}
 
+    static void addMissingRootCertificates();
+
     bool repost(QWindow *window, QEvent *original, QEvent *fixed);
 
     QList<QEvent *> reposted;

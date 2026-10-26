@@ -4,6 +4,8 @@
 #include <QMouseEvent>
 #include <QProxyStyle>
 #include <QScreen>
+#include <QSslCertificate>
+#include <QSslConfiguration>
 #include <QStyle>
 #include <QTimer>
 #include <QWindow>
@@ -30,6 +32,17 @@ void AndroidSupport::beforeApplication()
 void AndroidSupport::install(QApplication *app)
 {
     app->installEventFilter(new AndroidSupport(app));
+    addMissingRootCertificates();
+}
+
+void AndroidSupport::addMissingRootCertificates()
+{
+    // Android 9 lacks GlobalSign Root R6, used by iota-world.org (IOTA list download)
+    const QList<QSslCertificate> extra = QSslCertificate::fromPath(":/android/certs/globalsign-root-r6.pem");
+
+    QSslConfiguration conf = QSslConfiguration::defaultConfiguration();
+    conf.setCaCertificates(QSslConfiguration::systemCaCertificates() + extra);
+    QSslConfiguration::setDefaultConfiguration(conf);
 }
 
 namespace
