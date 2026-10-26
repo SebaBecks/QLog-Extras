@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QDialog>
 #include <QEvent>
+#include <QJniObject>
 #include <QMouseEvent>
 #include <QProxyStyle>
 #include <QScreen>
@@ -27,6 +28,32 @@ void AndroidSupport::beforeApplication()
 
     // the online map runs in Android's WebView
     QtWebView::initialize();
+
+    applyScreenScale();
+}
+
+void AndroidSupport::applyScreenScale()
+{
+    if ( qEnvironmentVariableIsSet("QT_SCALE_FACTOR") )
+        return;
+
+    // QApplication does not exist yet, so read the display from Android directly
+    const QJniObject metrics = QJniObject::callStaticObjectMethod("android/content/res/Resources", "getSystem",
+                                                                  "()Landroid/content/res/Resources;")
+                                   .callObjectMethod("getDisplayMetrics", "()Landroid/util/DisplayMetrics;");
+    if ( !metrics.isValid() )
+        return;
+
+    const int longSide = qMax(metrics.getField<jint>("widthPixels"), metrics.getField<jint>("heightPixels"));
+    const float density = metrics.getField<jfloat>("density");
+    if ( density <= 0 )
+        return;
+
+    // QLog's main window needs about 1280 logical pixels across; tablets such as
+    // the Galaxy Tab S3 (2048 px at density 2) would get only 1024
+    const qreal scale = qBound(0.75, longSide / (density * 1280.0), 1.0);
+    if ( scale < 1.0 )
+        qputenv("QT_SCALE_FACTOR", QByteArray::number(scale, 'f', 3));
 }
 
 void AndroidSupport::install(QApplication *app)
@@ -181,6 +208,21 @@ bool AndroidSupport::eventFilter(QObject *obj, QEvent *event)
                 dialog->setMinimumSize(dialog->minimumSize().boundedTo(available.size()));
                 dialog->setWindowState(dialog->windowState() | Qt::WindowMaximized);
             }
+        }
+    }
+
+    // With QT_SCALE_FACTOR, Qt's Android plugin sizes maximized windows
+    // without the factor, so they cover only part of the screen
+    if ( event->type() == QEvent::Resize || event->type() == QEvent::WindowStateChange )
+    {
+        QWidget *widget = qobject_cast<QWidget *>(obj);
+
+        if ( widget && widget->isWindow() && widget->isMaximized() && widget->screen() )
+        {
+            const QRect available = widget->screen()->availableGeometry();
+
+            if ( widget->geometry() != available )
+                QTimer::singleShot(0, widget, [widget, available]() { widget->setGeometry(available); });
         }
     }
 

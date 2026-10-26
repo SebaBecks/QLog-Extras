@@ -1663,6 +1663,10 @@ void MainWindow::setLayoutGeometry()
     QApplication::processEvents();
 #endif
     restoreGeometry(newGeometry);
+#ifdef Q_OS_ANDROID
+    // a saved size may come from another screen scale; always fill the screen
+    showMaximized();
+#endif
 
     // workaround for QTBUG-46620
     QTimer* nt = new QTimer(this);
@@ -1703,6 +1707,9 @@ void MainWindow::setSimplyLayoutGeometry()
         QApplication::processEvents();
 #endif
         restoreGeometry(layoutProfile.mainGeometry);
+#ifdef Q_OS_ANDROID
+        showMaximized();
+#endif
         QApplication::processEvents();
 
         // workaround for QTBUG-46620

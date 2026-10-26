@@ -25,6 +25,8 @@ private:
     explicit AndroidSupport(QObject *parent) : QObject(parent) {}
 
     static void addMissingRootCertificates();
+    // Small logical screens (high density on a 10" tablet) get a smaller UI scale
+    static void applyScreenScale();
 
     bool repost(QWindow *window, QEvent *original, QEvent *fixed);
 
